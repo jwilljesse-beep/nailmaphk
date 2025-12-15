@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NailMap HK (Sheets Powered)</title>
+  <title>NailMap HK</title>
 
   <!-- Tailwind (CDN for quick preview) -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -41,6 +41,7 @@
     crossorigin=""
   ></script>
 
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -62,7 +63,6 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .leaflet-container { font: inherit; }
-    main { height: calc(100vh - 64px); }
   </style>
 </head>
 
@@ -72,11 +72,12 @@
     <div class="flex items-center justify-between w-full max-w-[1920px] mx-auto gap-4">
       <div class="flex items-center gap-3">
         <div class="size-9 text-primary bg-background-light rounded-full flex items-center justify-center border border-border-subtle">
+          <!-- Logo placeholder (你遲啲畀我 PNG/SVG 我再換) -->
           <span class="material-symbols-outlined" style="font-size: 20px;">spa</span>
         </div>
         <div class="leading-tight">
           <div class="text-xl font-extrabold tracking-tight">NailMap HK</div>
-          <div class="text-xs text-text-subtle">Sheets Powered • 私隱優先（商廈/工作室只顯示大概位置）</div>
+          <div class="text-xs text-text-subtle">資料以公開來源整理｜商廈/工作室只顯示大概位置</div>
         </div>
       </div>
 
@@ -85,17 +86,18 @@
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
           <input id="qTop"
             class="w-full h-10 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="Search salons, services, keywords…"
+            placeholder="Search salons, districts, keywords…（荔枝角 / lai chi kok 都得）"
           />
         </label>
       </div>
 
+      <!-- Hidden for now -->
       <div class="flex items-center gap-3">
         <button class="hidden lg:flex items-center gap-2 text-sm font-semibold text-text-main hover:text-primary transition-colors">
           For Businesses
         </button>
-        <div class="h-6 w-px bg-border-subtle hidden lg:block"></div>
-        <button class="flex items-center justify-center rounded-xl h-10 px-4 bg-white border border-border-subtle hover:bg-background-light text-text-main gap-2 text-sm font-bold transition-colors">
+        <div class="hidden h-6 w-px bg-border-subtle lg:block"></div>
+        <button class="hidden items-center justify-center rounded-xl h-10 px-4 bg-white border border-border-subtle hover:bg-background-light text-text-main gap-2 text-sm font-bold transition-colors">
           <span class="material-symbols-outlined" style="font-size: 20px;">account_circle</span>
           <span class="hidden sm:inline">Log In</span>
         </button>
@@ -104,7 +106,7 @@
   </header>
 
   <!-- Main -->
-  <main class="w-full max-w-[1920px] mx-auto flex overflow-hidden">
+  <main class="h-[calc(100vh-64px)] w-full max-w-[1920px] mx-auto flex overflow-hidden">
     <!-- Left panel (List) -->
     <section id="panelList" class="w-full lg:w-[55%] xl:w-[50%] h-full bg-background-light relative z-10 shadow-xl lg:shadow-none overflow-hidden flex flex-col">
       <!-- Search + filters -->
@@ -113,17 +115,11 @@
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
           <input id="qMobile"
             class="w-full h-11 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="Search salons, services, keywords…"
+            placeholder="Search salons, districts, keywords…"
           />
         </label>
 
         <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <button id="btnAllFilters"
-            class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-text-main text-white px-4 shadow-sm hover:shadow-md transition-all">
-            <span class="material-symbols-outlined text-sm">tune</span>
-            <span class="text-sm font-medium">All Filters</span>
-          </button>
-
           <button id="btnNearMe"
             class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-sm">my_location</span>
@@ -140,14 +136,19 @@
             <span class="text-sm font-medium">Nail Art</span>
           </button>
 
+          <button data-tag="Japanese Style"
+            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+            <span class="text-sm font-medium">Japanese Style</span>
+          </button>
+
           <button data-tag="Eyelash"
             class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">Eyelash</span>
           </button>
 
-          <button data-tag="Japanese Style"
+          <button data-tag="$"
             class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">Japanese Style</span>
+            <span class="text-sm font-medium">$</span>
           </button>
 
           <button data-tag="$$"
@@ -174,10 +175,13 @@
 
         <p class="text-[11px] text-text-subtle flex items-start gap-1.5 leading-snug">
           <span class="material-symbols-outlined text-[14px] shrink-0 translate-y-[1px]">info</span>
-          商廈/工作室：只顯示大概位置；到訪地址以店方確認為準。資料來源：公開資料整理。
+          商廈/工作室：只顯示大概位置（marker 只作區域參考）；到訪地址以店方確認為準。
         </p>
 
-        <div id="loadState" class="hidden text-xs text-text-subtle"></div>
+        <div id="sysBanner" class="hidden rounded-xl border border-border-subtle bg-white px-4 py-3 text-sm">
+          <div class="font-semibold">網站顯示 Sheet 有問題（詳情請開 Console）。網站仍可運作，但建議盡快修正。</div>
+          <div class="text-text-subtle text-xs mt-1" id="sysBannerMeta"></div>
+        </div>
       </div>
 
       <!-- List -->
@@ -186,7 +190,7 @@
         <div class="py-6 text-center">
           <button id="btnLoadMore"
             class="text-text-main font-semibold hover:text-primary transition-colors inline-flex items-center gap-1">
-            Load more (demo)
+            Load more
             <span class="material-symbols-outlined">expand_more</span>
           </button>
         </div>
@@ -219,56 +223,73 @@
       <div class="absolute top-4 left-4 z-[1000]">
         <label class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md text-sm font-semibold text-text-main select-none">
           <input id="chkMoveSearch" checked class="form-checkbox rounded text-primary border-gray-300 focus:ring-primary h-4 w-4" type="checkbox" />
-          <span>Search as I move the map</span>
+          <span>Auto fit to results</span>
         </label>
       </div>
     </section>
-
-    <!-- Mobile bottom bar toggle -->
-    <div class="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[2000]">
-      <div class="bg-white border border-border-subtle shadow-lg rounded-full overflow-hidden flex">
-        <button id="btnShowList" class="px-4 py-2 text-sm font-bold text-text-main hover:bg-background-light inline-flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">view_list</span>
-          List
-        </button>
-        <div class="w-px bg-border-subtle"></div>
-        <button id="btnShowMap" class="px-4 py-2 text-sm font-bold text-text-main hover:bg-background-light inline-flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">map</span>
-          Map
-        </button>
-      </div>
-    </div>
   </main>
 
+  <!-- Mobile bottom toggle -->
+  <div class="lg:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-[1200]">
+    <div class="bg-white border border-border-subtle shadow-lg rounded-full flex overflow-hidden">
+      <button id="btnTabList" class="px-5 py-2 text-sm font-semibold text-text-main hover:bg-background-light inline-flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">list</span> List
+      </button>
+      <button id="btnTabMap" class="px-5 py-2 text-sm font-semibold text-text-main hover:bg-background-light inline-flex items-center gap-2 border-l border-border-subtle">
+        <span class="material-symbols-outlined text-[18px]">map</span> Map
+      </button>
+    </div>
+  </div>
+
 <script>
-/* ============================
+/* =========================
    CONFIG
-============================ */
-// ✅ 已替你插入 exec URL
+========================= */
 const API_URL = "https://script.google.com/macros/s/AKfycbwOFC2Dj31_WGgI2C0S7RGr74ueVQ3Z3rkEIzoFtW12El_VMgW-afwGAToEZrKLEnyh2A/exec";
+const AUTO_REFRESH_MS = 5 * 60 * 1000;
 
-/* ============================
-   DATA
-============================ */
-let SALONS = [];
-
-/* ============================
-   Utilities
-============================ */
-const toRad = (d) => d * Math.PI / 180;
-function haversineKm(aLat, aLng, bLat, bLng) {
-  const R = 6371;
-  const dLat = toRad(bLat - aLat);
-  const dLng = toRad(bLng - aLng);
-  const s1 = Math.sin(dLat/2) ** 2;
-  const s2 = Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * (Math.sin(dLng/2) ** 2);
-  return 2 * R * Math.asin(Math.sqrt(s1 + s2));
+/* =========================
+   FAVORITES (localStorage)
+========================= */
+const FAV_KEY = "nailmap_favs_v1";
+function loadFavs() {
+  try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); }
+  catch { return new Set(); }
 }
+function saveFavs(set) {
+  localStorage.setItem(FAV_KEY, JSON.stringify([...set]));
+}
+let favs = loadFavs();
+
+/* =========================
+   STATE
+========================= */
+let SALONS = []; // from Sheets
+let state = {
+  q: "",
+  activeTags: new Set(),
+  userLoc: null,
+  nearMeMode: false,
+};
+
+/* =========================
+   HELPERS
+========================= */
 function escapeHtml(str="") {
   return String(str).replace(/[&<>"']/g, (m) => ({
     "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
   }[m]));
 }
+
+function normalizeText(s="") {
+  return String(s)
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/[’'"]/g, "")
+    .replace(/[\-_/]+/g, " ")
+    .trim();
+}
+
 function formatDateYYYYMMDD(value) {
   if (!value) return "";
   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) return value.trim();
@@ -280,49 +301,80 @@ function formatDateYYYYMMDD(value) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/* ============================
-   Privacy / Trust rules
-============================ */
-function privacyLine(s) {
-  return (s.location_type === "Building")
-    ? "商廈/工作室：僅顯示大概位置；到訪地址以店方確認為準"
-    : "地址來源：公開資料；到訪前建議向店方確認";
-}
-function sourceLine(s) {
-  const updated = s.lastVerified ? `Updated: ${s.lastVerified}` : "Updated: —";
-  const src = s.sourceUrl
-    ? `<a class="text-xs text-primary-hover hover:underline" href="${s.sourceUrl}" target="_blank" rel="noopener">Source</a>`
-    : `<span class="text-xs text-text-subtle">Source: —</span>`;
-  return `<div class="flex flex-wrap items-center gap-3 justify-end">${src}<span class="text-xs text-text-subtle">${updated}</span></div>`;
+function formatPriceLabel(s) {
+  const min = (s.price_tier_min || "").trim();
+  const max = (s.price_tier_max || "").trim();
+  const tier = (min && max) ? `${min}–${max}` : (s.priceTier || "");
+  const range = (s.price_range_hkd || "").trim();
+  const rangeLabel = range ? `（HKD${range}）` : "";
+  return (tier ? tier + " " : "") + rangeLabel;
 }
 
-/* ============================
-   Mobile toggle
-============================ */
-function isMobile() {
-  return window.matchMedia("(max-width: 1023px)").matches;
+function haversineKm(aLat, aLng, bLat, bLng) {
+  const R = 6371;
+  const toRad = (d) => d * Math.PI / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const s1 = Math.sin(dLat/2) ** 2;
+  const s2 = Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * (Math.sin(dLng/2) ** 2);
+  return 2 * R * Math.asin(Math.sqrt(s1 + s2));
 }
-function showPanel(which) {
-  const list = document.getElementById("panelList");
-  const mapPanel = document.getElementById("panelMap");
-  if (!isMobile()) return;
 
-  if (which === "map") {
-    list.classList.add("hidden");
-    mapPanel.classList.remove("hidden");
-    mapPanel.classList.add("block");
-    setTimeout(() => { try { map.invalidateSize(true); } catch(e){} }, 80);
-  } else {
-    mapPanel.classList.add("hidden");
-    mapPanel.classList.remove("block");
-    list.classList.remove("hidden");
+function matchesQuery(salon, q) {
+  if (!q) return true;
+  const qq = normalizeText(q);
+
+  const aliasText = Array.isArray(salon.aliases) ? salon.aliases.join(" ") : (salon.aliases || "");
+  const hay = normalizeText([
+    salon.name,
+    salon.district,
+    salon.district_en || "",
+    salon.addressText,
+    salon.address_en || "",
+    salon.note,
+    salon.priceTier,
+    formatPriceLabel(salon),
+    ...(salon.tags || []),
+    aliasText
+  ].join(" "));
+
+  return hay.includes(qq);
+}
+
+function matchesTags(salon, tagsSet) {
+  if (tagsSet.size === 0) return true;
+  const t = new Set(salon.tags || []);
+  for (const tag of tagsSet) {
+    if (!t.has(tag)) return false;
   }
+  return true;
 }
 
-/* ============================
-   Map init
-============================ */
-const map = L.map("map", { zoomControl: false }).setView([22.3376, 114.1480], 13);
+function getFiltered() {
+  let items = SALONS
+    .filter(s => matchesQuery(s, state.q))
+    .filter(s => matchesTags(s, state.activeTags));
+
+  if (state.nearMeMode && state.userLoc) {
+    items = items
+      .map(s => {
+        if (s.lat == null || s.lng == null) return { ...s, _km: null };
+        return { ...s, _km: haversineKm(state.userLoc.lat, state.userLoc.lng, s.lat, s.lng) };
+      })
+      .sort((a,b) => {
+        if (a._km == null && b._km == null) return 0;
+        if (a._km == null) return 1;
+        if (b._km == null) return -1;
+        return a._km - b._km;
+      });
+  }
+  return items;
+}
+
+/* =========================
+   MAP (Leaflet)
+========================= */
+const map = L.map("map", { zoomControl: false }).setView([22.334, 114.148], 12);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
@@ -342,84 +394,90 @@ function setUserMarker(lat, lng) {
   userMarker.bindPopup("<b>你而家位置</b><br/>（只作附近搜尋用途）");
 }
 
-/* ============================
-   State
-============================ */
-let state = {
-  q: "",
-  activeTags: new Set(),
-  userLoc: null,
-  nearMeMode: false,
-};
+function renderMarkers(items) {
+  markerLayer.clearLayers();
+  if (state.userLoc) setUserMarker(state.userLoc.lat, state.userLoc.lng);
 
-/* ============================
-   Filtering
-============================ */
-function matchesQuery(salon, q) {
-  if (!q) return true;
-  const hay = [
-    salon.name, salon.district, salon.priceTier,
-    salon.addressText, salon.note, ...(salon.tags || [])
-  ].join(" ").toLowerCase();
-  return hay.includes(q.toLowerCase());
-}
-function matchesTags(salon, tagsSet) {
-  if (tagsSet.size === 0) return true;
-  const t = new Set(salon.tags || []);
-  for (const tag of tagsSet) {
-    if (!t.has(tag)) return false;
-  }
-  return true;
-}
-function getFiltered() {
-  let items = SALONS
-    .filter(s => matchesQuery(s, state.q))
-    .filter(s => matchesTags(s, state.activeTags));
+  items.forEach(s => {
+    if (s.lat == null || s.lng == null) return; // no marker if no coords
 
-  if (state.nearMeMode && state.userLoc) {
-    items = items
-      .map(s => {
-        const ok = Number.isFinite(s.lat) && Number.isFinite(s.lng);
-        return ok
-          ? ({ ...s, _km: haversineKm(state.userLoc.lat, state.userLoc.lng, s.lat, s.lng), _hasGeo: true })
-          : ({ ...s, _km: Infinity, _hasGeo: false });
-      })
-      .sort((a,b) => (a._km - b._km));
-  }
-  return items;
+    const m = L.marker([s.lat, s.lng]).addTo(markerLayer);
+
+    const tags = (s.tags || []).slice(0, 6).map(t =>
+      `<span style="display:inline-block;margin:2px 4px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:11px;">${escapeHtml(t)}</span>`
+    ).join("");
+
+    const src = s.sourceUrl
+      ? `<div style="margin-top:8px;"><a href="${s.sourceUrl}" target="_blank" rel="noopener" style="color:#E57A85;text-decoration:underline;">Source</a></div>`
+      : "";
+
+    const price = formatPriceLabel(s);
+
+    m.bindPopup(`
+      <div style="min-width:240px;">
+        <div style="font-weight:800;font-size:15px;color:#543D37;">${escapeHtml(s.name)}</div>
+        <div style="margin-top:4px;font-size:12px;color:#99827D;">${escapeHtml(s.district)} ${price ? " • " + escapeHtml(price) : ""}</div>
+        <div style="margin-top:8px;font-size:13px;color:#543D37;">
+          <b>位置（大概）</b>：${escapeHtml(s.addressText || "—")}
+        </div>
+        <div style="margin-top:8px;">${tags}</div>
+        <div style="margin-top:10px;font-size:11px;color:#99827D;">
+          商廈/工作室：僅顯示大概位置；到訪地址以店方確認為準
+        </div>
+        ${src}
+      </div>
+    `);
+
+    m._salonId = s.id;
+  });
 }
 
-/* ============================
-   Rendering
-============================ */
+/* =========================
+   LIST RENDER
+========================= */
+function sourceLine(s) {
+  const show = String(s.show_updated || "").toLowerCase().trim() === "yes";
+  const updated = (show && s.lastVerified) ? `Updated: ${s.lastVerified}` : "";
+
+  const src = s.sourceUrl
+    ? `<a class="text-xs text-primary-hover hover:underline" href="${s.sourceUrl}" target="_blank" rel="noopener">Source</a>`
+    : `<span class="text-xs text-text-subtle">Source: —</span>`;
+
+  return `<div class="mt-2 flex items-center justify-end gap-3">
+    ${src}
+    ${updated ? `<span class="text-xs text-text-subtle">${escapeHtml(updated)}</span>` : ``}
+  </div>`;
+}
+
+function privacyNoteByLocationType(locationType) {
+  // locationType already normalized by script, but be defensive
+  const t = String(locationType || "").toLowerCase();
+  if (t === "mall" || t === "street") return "公開地址可列明；到訪地址以店方確認為準";
+  return "商廈/工作室：僅顯示大概位置；到訪地址以店方確認為準";
+}
+
+let listLimit = 60;
 function renderList(items) {
   const list = document.getElementById("list");
-  if (!items.length) {
-    list.innerHTML =
-      `<div class="bg-white border border-border-subtle rounded-xl p-4 text-sm text-text-subtle">
-        暫時未有資料 / 或篩選條件太嚴格。<br/>
-        你可以：<b>Reset</b>，或者開 Console 睇「Validation Report / fetch error」。
-      </div>`;
-    document.getElementById("countText").textContent = "0";
-    return;
-  }
+  const showing = items.slice(0, listLimit);
 
-  list.innerHTML = items.map(s => {
-    const hasGeo = Number.isFinite(s.lat) && Number.isFinite(s.lng);
+  list.innerHTML = showing.map(s => {
+    const isFav = favs.has(s.id);
+    const heartClass = isFav ? "text-tertiary" : "text-text-subtle";
 
-    const distance = (state.nearMeMode && state.userLoc && Number.isFinite(s._km) && s._km !== Infinity)
+    const distance = (state.nearMeMode && state.userLoc && s._km != null)
       ? `<span class="text-xs font-semibold text-text-subtle">${s._km.toFixed(2)} km</span>`
-      : (state.nearMeMode && state.userLoc && !hasGeo)
-        ? `<span class="text-xs font-semibold text-text-subtle">—</span>`
+      : (state.nearMeMode && state.userLoc && s._km == null)
+        ? `<span class="text-xs font-semibold text-text-subtle">— km</span>`
         : "";
+
+    const price = formatPriceLabel(s);
 
     const tags = (s.tags || []).slice(0, 6).map(t => `
       <span class="px-2 py-1 bg-background-light rounded text-xs font-medium text-text-subtle">${escapeHtml(t)}</span>
     `).join("");
 
-    const geoBadge = hasGeo
-      ? `<span class="text-[11px] font-bold text-text-subtle bg-background-light px-2 py-1 rounded-full">Map ✓</span>`
-      : `<span class="text-[11px] font-bold text-text-subtle bg-background-light px-2 py-1 rounded-full">Map —</span>`;
+    const privacy = privacyNoteByLocationType(s.location_type);
 
     return `
       <article data-id="${escapeHtml(s.id)}"
@@ -431,38 +489,32 @@ function renderList(items) {
                 ${escapeHtml(s.name)}
               </h3>
               <p class="text-text-subtle text-sm mt-1">
-                ${escapeHtml(s.district)} • ${escapeHtml(s.priceTier || "")}
+                ${escapeHtml(s.district)}${price ? " • " + escapeHtml(price) : ""}
               </p>
             </div>
-            <div class="flex flex-col items-end gap-2">
-              <div class="flex items-center gap-2">
-                ${distance}
-                ${geoBadge}
-              </div>
-              <button type="button" class="p-1.5 bg-white border border-border-subtle rounded-full hover:bg-background-light" aria-label="favorite">
-                <span class="material-symbols-outlined text-tertiary text-[18px]">favorite</span>
+            <div class="flex flex-col items-end gap-1">
+              ${distance}
+              <button type="button" class="favBtn p-1.5 bg-white border border-border-subtle rounded-full hover:bg-background-light" data-id="${escapeHtml(s.id)}" aria-label="favorite">
+                <span class="material-symbols-outlined ${heartClass} text-[18px]">favorite</span>
               </button>
             </div>
           </div>
 
-          <div class="flex flex-wrap gap-2">${tags}</div>
+          ${tags ? `<div class="flex flex-wrap gap-2">${tags}</div>` : ``}
 
           <div class="pt-3 border-t border-background-light">
             <div class="text-sm text-text-main">
               <span class="material-symbols-outlined align-[-5px] text-[18px] text-text-subtle">location_on</span>
-              ${escapeHtml(s.addressText)}
+              ${escapeHtml(s.addressText || "—")}
             </div>
-            <div class="text-xs text-text-subtle mt-1">
-              ${escapeHtml(s.note || "")}
-            </div>
+            ${s.note ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>` : ``}
 
-            <div class="mt-2 flex items-start justify-between gap-3">
-              <p class="text-[11px] text-text-subtle flex items-start gap-1.5 leading-snug flex-1">
-                <span class="material-symbols-outlined text-[14px] shrink-0 translate-y-[1px]">info</span>
-                ${escapeHtml(privacyLine(s))}
-              </p>
-              ${sourceLine(s)}
-            </div>
+            <p class="text-[11px] text-text-subtle flex items-start gap-1.5 leading-snug mt-2">
+              <span class="material-symbols-outlined text-[14px] shrink-0 translate-y-[1px]">info</span>
+              ${escapeHtml(privacy)}
+            </p>
+
+            ${sourceLine(s)}
           </div>
         </div>
       </article>
@@ -470,66 +522,72 @@ function renderList(items) {
   }).join("");
 
   document.getElementById("countText").textContent = items.length;
+
+  const btnLoadMore = document.getElementById("btnLoadMore");
+  btnLoadMore.disabled = (listLimit >= items.length);
+  btnLoadMore.style.opacity = btnLoadMore.disabled ? "0.4" : "1";
 }
 
-function renderMarkers(items) {
-  markerLayer.clearLayers();
-  if (state.userLoc) setUserMarker(state.userLoc.lat, state.userLoc.lng);
-
-  const geoItems = items.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-
-  geoItems.forEach(s => {
-    const m = L.marker([s.lat, s.lng]).addTo(markerLayer);
-
-    const tags = (s.tags || []).slice(0, 6).map(t =>
-      `<span style="display:inline-block;margin:2px 4px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:11px;">${escapeHtml(t)}</span>`
-    ).join("");
-
-    const src = s.sourceUrl
-      ? `<div style="margin-top:8px;">
-           <a href="${s.sourceUrl}" target="_blank" rel="noopener" style="color:#E57A85;text-decoration:underline;">Source</a>
-           <span style="margin-left:10px;color:#99827D;font-size:11px;">${escapeHtml(s.lastVerified ? ("Updated: " + s.lastVerified) : "Updated: —")}</span>
-         </div>`
-      : `<div style="margin-top:8px;color:#99827D;font-size:11px;">${escapeHtml(s.lastVerified ? ("Updated: " + s.lastVerified) : "Updated: —")}</div>`;
-
-    m.bindPopup(`
-      <div style="min-width:240px;">
-        <div style="font-weight:800;font-size:15px;color:#543D37;">${escapeHtml(s.name)}</div>
-        <div style="margin-top:4px;font-size:12px;color:#99827D;">${escapeHtml(s.district)} • ${escapeHtml(s.priceTier || "")}</div>
-        <div style="margin-top:8px;font-size:13px;color:#543D37;">
-          <b>位置</b>：${escapeHtml(s.addressText)}
-        </div>
-        <div style="margin-top:8px;">${tags}</div>
-        <div style="margin-top:10px;font-size:11px;color:#99827D;">
-          ${escapeHtml(privacyLine(s))}
-        </div>
-        ${src}
-      </div>
-    `);
-
-    m._salonId = s.id;
-  });
-
-  const moveSearch = document.getElementById("chkMoveSearch")?.checked;
-  if (moveSearch && geoItems.length > 0) {
-    const bounds = L.latLngBounds(geoItems.map(s => [s.lat, s.lng]));
-    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
-  }
-}
-
+/* =========================
+   SYNC
+========================= */
 function syncAll() {
   const items = getFiltered();
   renderList(items);
   renderMarkers(items);
+
+  const moveSearch = document.getElementById("chkMoveSearch")?.checked;
+  if (moveSearch && items.length > 0) {
+    const pts = items
+      .filter(s => s.lat != null && s.lng != null)
+      .map(s => [s.lat, s.lng]);
+
+    if (pts.length > 0) {
+      const bounds = L.latLngBounds(pts);
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
+    }
+  }
 }
 
-/* ============================
-   Events
-============================ */
+/* =========================
+   MOBILE PANEL TOGGLE
+========================= */
+function isMobile() { return window.matchMedia("(max-width: 1023px)").matches; }
+
+function showPanel(which) {
+  const list = document.getElementById("panelList");
+  const mapPanel = document.getElementById("panelMap");
+  if (!isMobile()) return;
+
+  if (which === "map") {
+    list.classList.add("hidden");
+    mapPanel.classList.remove("hidden");
+    mapPanel.classList.add("block");
+
+    // Leaflet needs invalidateSize after becoming visible
+    setTimeout(() => {
+      try {
+        map.invalidateSize(true);
+        setTimeout(() => map.invalidateSize(true), 120);
+      } catch (e) {}
+    }, 80);
+
+  } else {
+    mapPanel.classList.add("hidden");
+    mapPanel.classList.remove("block");
+    list.classList.remove("hidden");
+  }
+}
+
+/* =========================
+   EVENTS
+========================= */
 function setQuery(q) {
   state.q = q || "";
+  listLimit = 60;
   syncAll();
 }
+
 document.getElementById("qTop").addEventListener("input", e => setQuery(e.target.value));
 document.getElementById("qMobile").addEventListener("input", e => setQuery(e.target.value));
 
@@ -540,10 +598,12 @@ document.querySelectorAll(".tagChip").forEach(btn => {
     if (active) state.activeTags.delete(tag);
     else state.activeTags.add(tag);
 
+    // visual toggle
     btn.classList.toggle("border-primary", !active);
     btn.classList.toggle("text-primary", !active);
     btn.classList.toggle("bg-primary/10", !active);
 
+    listLimit = 60;
     syncAll();
   });
 });
@@ -560,9 +620,60 @@ document.getElementById("btnReset").addEventListener("click", () => {
     btn.classList.remove("border-primary", "text-primary", "bg-primary/10");
   });
 
+  listLimit = 60;
   syncAll();
 });
 
+document.getElementById("btnLoadMore").addEventListener("click", () => {
+  listLimit += 60;
+  syncAll();
+});
+
+// Map controls
+document.getElementById("btnZoomIn").addEventListener("click", () => map.zoomIn());
+document.getElementById("btnZoomOut").addEventListener("click", () => map.zoomOut());
+
+// Mobile tabs
+document.getElementById("btnTabList").addEventListener("click", () => showPanel("list"));
+document.getElementById("btnTabMap").addEventListener("click", () => showPanel("map"));
+
+// Favorites + card click
+document.getElementById("list").addEventListener("click", (e) => {
+  const favBtn = e.target.closest(".favBtn");
+  if (favBtn) {
+    e.stopPropagation();
+    const id = favBtn.getAttribute("data-id");
+    if (favs.has(id)) favs.delete(id); else favs.add(id);
+    saveFavs(favs);
+    syncAll();
+    return;
+  }
+
+  const card = e.target.closest(".salonCard");
+  if (!card) return;
+  const id = card.getAttribute("data-id");
+  const items = getFiltered();
+  const s = items.find(x => x.id === id);
+  if (!s) return;
+
+  // switch to map on mobile
+  if (isMobile()) showPanel("map");
+
+  // focus map if coordinates exist
+  if (s.lat != null && s.lng != null) {
+    map.setView([s.lat, s.lng], 16);
+    markerLayer.eachLayer(layer => {
+      if (layer._salonId === id) layer.openPopup();
+    });
+  } else {
+    // no coords: just open a gentle note
+    alert("呢間店暫未有座標，所以地圖未能標示（list 仍可正常使用）。");
+  }
+});
+
+/* =========================
+   GEOLOCATION
+========================= */
 function requestGeolocation() {
   if (!navigator.geolocation) {
     alert("你的瀏覽器不支援定位功能。");
@@ -575,7 +686,6 @@ function requestGeolocation() {
       setUserMarker(state.userLoc.lat, state.userLoc.lng);
       map.setView([state.userLoc.lat, state.userLoc.lng], 15);
       syncAll();
-      if (isMobile()) showPanel("map");
     },
     (err) => {
       console.warn(err);
@@ -586,186 +696,108 @@ function requestGeolocation() {
 }
 document.getElementById("btnNearMe").addEventListener("click", () => requestGeolocation());
 document.getElementById("btnLocate").addEventListener("click", () => requestGeolocation());
-document.getElementById("btnZoomIn").addEventListener("click", () => map.zoomIn());
-document.getElementById("btnZoomOut").addEventListener("click", () => map.zoomOut());
 
-document.getElementById("list").addEventListener("click", (e) => {
-  const card = e.target.closest(".salonCard");
-  if (!card) return;
-  const id = card.getAttribute("data-id");
-  const items = getFiltered();
-  const s = items.find(x => x.id === id);
-  if (!s) return;
-
-  if (!Number.isFinite(s.lat) || !Number.isFinite(s.lng)) {
-    alert("呢間店暫未補上地圖座標（仍可用列表資料查看）。");
-    return;
-  }
-
-  map.setView([s.lat, s.lng], 16);
-  markerLayer.eachLayer(layer => {
-    if (layer._salonId === id) layer.openPopup();
-  });
-  if (isMobile()) showPanel("map");
-});
-
-/* ============================
-   Validation
-============================ */
-const REQUIRED_KEYS = [
-  "id","name","district","area_group","location_type",
-  "price_tier","tags","address_display","note","source_url",
-  "status","last_verified","lat","lng"
-];
-
-function validateSheetRows(data) {
-  const errors = [];
-  const warnings = [];
-  const ids = new Set();
-
-  data.forEach((row, idx) => {
-    const rowNo = idx + 1;
-
-    const missing = REQUIRED_KEYS.filter(k => !(k in row));
-    if (missing.length) warnings.push({ row: rowNo, type: "missing_keys", missing });
-
-    const id = String(row.id || "").trim();
-    if (!id) errors.push({ row: rowNo, type: "missing_id" });
-    else if (ids.has(id)) errors.push({ row: rowNo, type: "duplicate_id", id });
-    else ids.add(id);
-
-    const status = String(row.status || "").toLowerCase().trim();
-    if (status && status !== "active" && status !== "inactive") {
-      warnings.push({ row: rowNo, type: "bad_status", status });
-    }
-
-    const lt = String(row.location_type || "").trim();
-    if (lt && !["Building","Mall","Street","building","mall","street","商廈","工作室","商場","地舖"].includes(lt)) {
-      warnings.push({ row: rowNo, type: "bad_location_type", location_type: lt });
-    }
-
-    const lat = row.lat;
-    const lng = row.lng;
-    const latOk = (lat === "" || lat == null) ? true : Number.isFinite(Number(lat));
-    const lngOk = (lng === "" || lng == null) ? true : Number.isFinite(Number(lng));
-    if (!latOk || !lngOk) warnings.push({ row: rowNo, type: "bad_lat_lng", lat, lng });
-
-    if (row.tags != null && !Array.isArray(row.tags)) {
-      warnings.push({ row: rowNo, type: "tags_not_array", tags: row.tags });
-    }
-  });
-
-  return { errors, warnings };
-}
-
-/* ============================
-   Load from Sheets
-============================ */
-function normalizeLocationType(raw) {
-  let v = String(raw || "").trim().toLowerCase();
-  if (["building","bldg","商廈","工作室"].includes(v)) return "Building";
-  if (["mall","商場"].includes(v)) return "Mall";
-  if (["street","地舖"].includes(v)) return "Street";
-  return "Building";
-}
-
+/* =========================
+   LOAD DATA FROM SHEETS
+   Supports both:
+   - array (legacy)
+   - { meta, errors, warnings, data } (new script)
+========================= */
 function mapSheetToUI(s) {
-  const locationType = normalizeLocationType(s.location_type);
-
-  let tags = [];
-  if (Array.isArray(s.tags)) tags = s.tags;
-  else if (typeof s.tags === "string" && s.tags.trim()) tags = s.tags.split(",").map(x => x.trim()).filter(Boolean);
+  // Defensively map fields; tolerate missing columns
+  const tags = Array.isArray(s.tags) ? s.tags : [];
+  const aliases = Array.isArray(s.aliases) ? s.aliases : [];
 
   return {
     id: String(s.id || "").trim(),
     name: String(s.name || "").trim(),
     district: String(s.district || "").trim(),
+    district_en: String(s.district_en || "").trim(),
+    area_group: String(s.area_group || "").trim(),
+    location_type: String(s.location_type || "").trim(),
+    lat: (s.lat === "" || s.lat == null || Number.isNaN(Number(s.lat))) ? null : Number(s.lat),
+    lng: (s.lng === "" || s.lng == null || Number.isNaN(Number(s.lng))) ? null : Number(s.lng),
 
-    priceTier: String(s.price_tier || "").trim(),
+    price_tier_min: String(s.price_tier_min || "").trim(),
+    price_tier_max: String(s.price_tier_max || "").trim(),
+    price_range_hkd: String(s.price_range_hkd || "").trim(),
+
+    // compatibility:
+    priceTier: String(s.price_tier || s.priceTier || "").trim(),
+
     tags,
-
-    addressText: String(s.address_display || "").trim(),
+    aliases,
+    addressText: String(s.address_display || s.addressText || "").trim(),
+    address_en: String(s.address_en || "").trim(),
     note: String(s.note || "").trim(),
-    sourceUrl: String(s.source_url || "").trim(),
-    location_type: locationType,
+    sourceUrl: String(s.source_url || s.sourceUrl || "").trim(),
 
-    lat: (s.lat === "" || s.lat == null) ? null : Number(s.lat),
-    lng: (s.lng === "" || s.lng == null) ? null : Number(s.lng),
-
-    lastVerified: formatDateYYYYMMDD(s.last_verified),
+    show_updated: (s.show_updated === true) ? "yes" : String(s.show_updated || "").trim(),
+    lastVerified: formatDateYYYYMMDD(s.last_verified || s.lastVerified || "")
   };
 }
 
-function setLoadState(text, kind="info") {
-  const el = document.getElementById("loadState");
-  el.classList.remove("hidden");
-  el.classList.remove("text-red-600","text-amber-700","text-text-subtle");
-  if (kind === "error") el.classList.add("text-red-600");
-  else if (kind === "warn") el.classList.add("text-amber-700");
-  else el.classList.add("text-text-subtle");
-  el.textContent = text;
+function showSystemBanner(metaText) {
+  const box = document.getElementById("sysBanner");
+  const meta = document.getElementById("sysBannerMeta");
+  meta.textContent = metaText || "";
+  box.classList.remove("hidden");
 }
 
 async function loadSalonsFromSheet() {
-  setLoadState("Loading data from Google Sheets…", "info");
-
   const res = await fetch(API_URL, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load data: " + res.status);
 
-  const data = await res.json();
-  if (!Array.isArray(data)) {
-    if (data && data.error) throw new Error(data.error);
-    throw new Error("API did not return an array");
-  }
+  const json = await res.json();
 
-  const report = validateSheetRows(data);
-  if (report.errors.length || report.warnings.length) {
-    console.group("NailMapHK Sheet Validation Report");
-    if (report.errors.length) console.error("Errors:", report.errors);
-    if (report.warnings.length) console.warn("Warnings:", report.warnings);
-    console.groupEnd();
-    if (report.errors.length) {
-      setLoadState(`Sheet 有 ${report.errors.length} 個嚴重問題（詳情請開 Console）。網站仍可運作，但建議盡快修正。`, "warn");
-    } else {
-      setLoadState(`Sheet 有 ${report.warnings.length} 個警告（詳情請開 Console）。`, "warn");
-    }
+  let arr = [];
+  let errors = [];
+  let warnings = [];
+
+  if (Array.isArray(json)) {
+    arr = json;
+  } else if (json && Array.isArray(json.data)) {
+    arr = json.data;
+    errors = Array.isArray(json.errors) ? json.errors : [];
+    warnings = Array.isArray(json.warnings) ? json.warnings : [];
   } else {
-    setLoadState(`Loaded ${data.length} rows ✓`, "info");
-    setTimeout(() => document.getElementById("loadState").classList.add("hidden"), 1800);
+    throw new Error("API response format not recognized");
   }
 
-  SALONS = data
-    .filter(x => String(x.status || "").toLowerCase().trim() === "active")
-    .map(mapSheetToUI);
+  // Console logs for developer
+  if (errors.length) console.error("Errors:", errors);
+  if (warnings.length) console.warn("Warnings:", warnings);
+
+  // Show banner only if errors exist
+  if (errors.length) {
+    showSystemBanner(`Errors: ${errors.length}｜Warnings: ${warnings.length}｜請打開 Console 查看詳情。`);
+  }
+
+  SALONS = arr
+    .map(mapSheetToUI)
+    .filter(s => s.id && s.name); // basic safety
+
+  // If first load, set a reasonable map view to HK
+  if (SALONS.length > 0) {
+    const pts = SALONS.filter(s => s.lat != null && s.lng != null).map(s => [s.lat, s.lng]);
+    if (pts.length > 0) {
+      const bounds = L.latLngBounds(pts);
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
+    }
+  }
 
   syncAll();
 }
 
+// Initial load
 loadSalonsFromSheet().catch(err => {
   console.error(err);
-  setLoadState("讀取資料失敗：" + err.message, "error");
-  alert("讀取資料失敗：\n" + err.message + "\n\n如果你係用 file:// 開 HTML，請改用 http://localhost 或上傳到網頁託管。");
+  alert("讀取資料失敗：請檢查 Apps Script Web App 權限或 API_URL。");
 });
-setInterval(() => loadSalonsFromSheet().catch(console.error), 5 * 60 * 1000);
 
-/* ============================
-   Mobile toggle buttons
-============================ */
-document.getElementById("btnShowList").addEventListener("click", () => showPanel("list"));
-document.getElementById("btnShowMap").addEventListener("click", () => showPanel("map"));
+// Auto refresh
+setInterval(() => loadSalonsFromSheet().catch(console.error), AUTO_REFRESH_MS);
 
-window.addEventListener("resize", () => {
-  if (!isMobile()) {
-    document.getElementById("panelList").classList.remove("hidden");
-    const mapPanel = document.getElementById("panelMap");
-    mapPanel.classList.remove("hidden");
-    mapPanel.classList.add("block");
-    setTimeout(() => { try { map.invalidateSize(true); } catch(e){} }, 80);
-  } else {
-    showPanel("list");
-  }
-});
-showPanel("list");
 </script>
 </body>
 </html>
