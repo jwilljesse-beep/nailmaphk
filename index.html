@@ -2,9 +2,10 @@
 <html lang="zh-HK">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NailMap HK</title>
 
+  <!-- Tailwind (CDN for quick preview) -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script>
     tailwind.config = {
@@ -27,13 +28,29 @@
     }
   </script>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200..700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap"
+    rel="stylesheet"
+  >
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200..700&display=swap"
+    rel="stylesheet"
+  >
 
   <style>
     body { font-family: "Plus Jakarta Sans", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
@@ -41,17 +58,15 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #EBDAD4; border-radius: 999px; }
     ::-webkit-scrollbar-thumb:hover { background: #d4c4b6; }
-    
-    #mapDesktop, #mapMobile { width: 100%; height: 100%; z-index: 1; }
-    
+    #mapDesktop, #mapMobile { width: 100%; height: 100%; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .leaflet-container { font: inherit; }
   </style>
 </head>
 
-<body class="bg-background-light text-text-main flex flex-col h-dvh overflow-hidden">
-  
+<body class="bg-background-light text-text-main">
+  <!-- Header -->
   <header class="flex-none z-20 bg-white-overlay border-b border-border-subtle px-5 py-3 lg:px-10">
     <div class="flex items-center justify-between w-full max-w-[1920px] mx-auto gap-4">
       <div class="flex items-center gap-3">
@@ -60,44 +75,50 @@
         </div>
         <div class="leading-tight">
           <div class="text-xl font-extrabold tracking-tight">NailMap HK</div>
-          <div class="text-xs text-text-subtle">香港美甲店資料庫</div>
+          <div class="text-xs text-text-subtle">香港美甲店資料庫（Phase 1：資料性＋附近搜尋）</div>
         </div>
       </div>
 
+      <!-- Top search (desktop) -->
       <div class="hidden md:block w-[560px]">
         <label class="relative block">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
           <input id="qTop"
             class="w-full h-10 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="搜尋：店名／地區（Lai Chi Kok）／Tag…"
+            placeholder="搜尋：店名／地區（荔枝角 / Lai Chi Kok）／Tag…"
           />
         </label>
       </div>
 
+      <!-- Hidden for now: For Businesses / Login -->
       <div class="hidden"></div>
     </div>
   </header>
 
-  <div class="flex-none md:hidden px-4 pt-4">
+  <!-- Mobile tab switcher -->
+  <div class="md:hidden px-4 pt-4">
     <div class="flex items-center gap-2 bg-white border border-border-subtle rounded-full p-1 shadow-sm">
-      <button id="tabList" class="flex-1 h-10 rounded-full font-bold text-sm bg-text-main text-white transition-colors">
+      <button id="tabList" class="flex-1 h-10 rounded-full font-bold text-sm bg-text-main text-white">
         List
       </button>
-      <button id="tabMap" class="flex-1 h-10 rounded-full font-bold text-sm text-text-main hover:bg-background-light transition-colors">
+      <button id="tabMap" class="flex-1 h-10 rounded-full font-bold text-sm text-text-main hover:bg-background-light">
         Map
       </button>
     </div>
   </div>
 
-  <main class="flex-1 min-h-0 w-full max-w-[1920px] mx-auto flex overflow-hidden relative">
-    
+  <!-- Main -->
+  <main class="h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] w-full max-w-[1920px] mx-auto flex overflow-hidden">
+    <!-- Left panel (List) -->
     <section id="panelList" class="w-full md:w-[55%] xl:w-[50%] h-full bg-background-light relative z-10 shadow-xl md:shadow-none overflow-hidden flex flex-col">
+      <!-- Search + filters -->
       <div class="flex-none px-4 md:px-5 py-4 bg-background-light/95 backdrop-blur-sm border-b border-border-subtle flex flex-col gap-3">
+        <!-- Mobile search -->
         <label class="relative block md:hidden">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
           <input id="qMobile"
             class="w-full h-11 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="搜尋：店名 / 地區 / Tag…"
+            placeholder="搜尋：荔枝角 / Lai Chi Kok / Tag…"
           />
         </label>
 
@@ -113,17 +134,24 @@
             <span class="text-sm font-medium">有地圖座標</span>
           </button>
 
-          <button data-tag="Soft Gel" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+          <button data-tag="Soft Gel"
+            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">Soft Gel</span>
           </button>
-          <button data-tag="Hard Gel" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">Hard Gel</span>
-          </button>
-          <button data-tag="Nail Art" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+
+          <button data-tag="Nail Art"
+            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">Nail Art</span>
           </button>
-          <button data-tag="Japanese Style" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+
+          <button data-tag="Japanese Style"
+            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">Japanese Style</span>
+          </button>
+
+          <button data-tag="Eyelash"
+            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+            <span class="text-sm font-medium">Eyelash</span>
           </button>
         </div>
 
@@ -131,22 +159,34 @@
           <h1 class="text-text-main text-lg font-extrabold tracking-tight">
             <span id="countText">—</span> 間結果
           </h1>
-          <button id="btnReset" class="text-sm text-text-subtle hover:text-text-main inline-flex items-center gap-1">
+          <button id="btnReset"
+            class="text-sm text-text-subtle hover:text-text-main inline-flex items-center gap-1">
             <span class="material-symbols-outlined text-[18px]">restart_alt</span>
             Reset
           </button>
         </div>
 
+        <p class="text-[11px] text-text-subtle flex items-start gap-1.5 leading-snug">
+          <span class="material-symbols-outlined text-[14px] shrink-0 translate-y-[1px]">info</span>
+          私隱策略：商廈／工作室可只顯示大概位置；到訪地址以店方確認為準。
+        </p>
+
+        <div id="bannerError" class="hidden text-sm bg-white border border-tertiary/30 text-tertiary rounded-xl px-4 py-3">
+          讀取資料失敗：請檢查 API / 權限 / 網絡。
+        </div>
+
         <div id="bannerWarn" class="hidden text-sm bg-white border border-border-subtle text-text-main rounded-xl px-4 py-3">
-          <div class="font-bold mb-1">提示</div>
+          <div class="font-bold mb-1">Sheet 有警告（但網站仍可用）</div>
           <div id="warnText" class="text-text-subtle text-xs"></div>
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto px-4 md:px-5 py-5 overscroll-contain">
+      <!-- List -->
+      <div class="flex-1 overflow-y-auto px-4 md:px-5 py-5">
         <div id="list" class="flex flex-col gap-4 max-w-3xl mx-auto"></div>
         <div class="py-6 text-center">
-          <button id="btnLoadMore" class="text-text-main font-semibold hover:text-primary transition-colors inline-flex items-center gap-1">
+          <button id="btnLoadMore"
+            class="text-text-main font-semibold hover:text-primary transition-colors inline-flex items-center gap-1">
             Load more
             <span class="material-symbols-outlined">expand_more</span>
           </button>
@@ -154,37 +194,52 @@
       </div>
     </section>
 
+    <!-- Right panel (Desktop map) -->
     <section class="hidden md:block md:w-[45%] xl:w-[50%] h-full relative">
       <div class="absolute inset-0" id="mapDesktop"></div>
+
       <div class="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
-        <button id="btnLocateDesktop" class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
+        <button id="btnLocateDesktop"
+          class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
           <span class="material-symbols-outlined">my_location</span>
         </button>
         <div class="flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
-          <button id="btnZoomInDesktop" class="p-2 text-text-subtle hover:text-text-main transition-colors border-b border-gray-100">
+          <button id="btnZoomInDesktop"
+            class="p-2 text-text-subtle hover:text-text-main transition-colors border-b border-gray-100">
             <span class="material-symbols-outlined">add</span>
           </button>
-          <button id="btnZoomOutDesktop" class="p-2 text-text-subtle hover:text-text-main transition-colors">
+          <button id="btnZoomOutDesktop"
+            class="p-2 text-text-subtle hover:text-text-main transition-colors">
             <span class="material-symbols-outlined">remove</span>
           </button>
         </div>
       </div>
     </section>
 
+    <!-- Mobile map panel (hidden by default) -->
     <section id="panelMapMobile" class="md:hidden hidden w-full h-full relative">
       <div class="absolute inset-0" id="mapMobile"></div>
-      
+
       <div class="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
-        <button id="btnLocateMobile" class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
+        <button id="btnLocateMobile"
+          class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
           <span class="material-symbols-outlined">my_location</span>
         </button>
         <div class="flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
-          <button id="btnZoomInMobile" class="p-2 text-text-subtle hover:text-text-main transition-colors border-b border-gray-100">
+          <button id="btnZoomInMobile"
+            class="p-2 text-text-subtle hover:text-text-main transition-colors border-b border-gray-100">
             <span class="material-symbols-outlined">add</span>
           </button>
-          <button id="btnZoomOutMobile" class="p-2 text-text-subtle hover:text-text-main transition-colors">
+          <button id="btnZoomOutMobile"
+            class="p-2 text-text-subtle hover:text-text-main transition-colors">
             <span class="material-symbols-outlined">remove</span>
           </button>
+        </div>
+      </div>
+
+      <div class="absolute bottom-4 left-4 right-4 z-[1000]">
+        <div class="bg-white/95 backdrop-blur border border-border-subtle rounded-xl px-4 py-3 text-xs text-text-subtle">
+          Mobile Map：如果第一次見唔到地圖，切去 List 再切返 Map（已內建重算尺寸修正）。
         </div>
       </div>
     </section>
@@ -192,12 +247,12 @@
 
 <script>
 /* =========================
-   CONFIG
+   ✅ CONFIG
 ========================= */
 const API_URL = "https://script.google.com/macros/s/AKfycbwOFC2Dj31_WGgI2C0S7RGr74ueVQ3Z3rkEIzoFtW12El_VMgW-afwGAToEZrKLEnyh2A/exec";
 
 /* =========================
-   Helpers
+   ✅ Helpers
 ========================= */
 function norm(str) {
   return String(str || "")
@@ -227,6 +282,61 @@ function toNum(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+/* ✅ 嚴格輸出：$-$$ ($300-800) */
+function normalizeRangeText(range) {
+  let r = String(range ?? "").trim();
+  if (!r) return "";
+  r = r.replace(/–|—/g, "-").replace(/\s+/g, "");
+  r = r.replace(/^HK\$|^HKD|^\$/i, ""); // remove prefix
+  return r;
+}
+
+function priceTierToNum(t) {
+  const s = String(t ?? "").trim();
+  if (!s) return null;
+  if (/^\$+$/.test(s)) return s.length;      // "$$$"
+  const n = Number(s);
+  return Number.isFinite(n) ? Math.round(n) : null; // "1".."5"
+}
+function numToTier(n) {
+  if (!Number.isFinite(n) || n <= 0) return "";
+  return "$".repeat(Math.min(5, Math.max(1, n)));
+}
+
+function formatPriceDisplay(s) {
+  const minTierRaw = String(s.price_tier_min ?? "").trim();
+  const maxTierRaw = String(s.price_tier_max ?? "").trim();
+  const rangeRaw   = String(s.price_range_hkd ?? "").trim();
+
+  const a = priceTierToNum(minTierRaw);
+  const b = priceTierToNum(maxTierRaw);
+  const r = normalizeRangeText(rangeRaw);
+
+  let tierText = "";
+  if (a != null && b != null) {
+    const lo = Math.min(a, b), hi = Math.max(a, b);
+    tierText = (lo === hi) ? numToTier(lo) : `${numToTier(lo)}-${numToTier(hi)}`;
+  } else if (a != null || b != null) {
+    tierText = numToTier(a ?? b);
+  } else {
+    // fallback keep raw tier strings if present
+    if (minTierRaw && maxTierRaw) tierText = `${minTierRaw}-${maxTierRaw}`;
+    else tierText = (minTierRaw || maxTierRaw || "");
+  }
+
+  // ✅ final format per your requirement
+  if (tierText && r) return `${tierText} ($${r})`;
+  if (tierText) return tierText;
+  if (r) return `($${r})`;
+  return "";
+}
+
+function escapeHtml(str="") {
+  return String(str).replace(/[&<>"']/g, (m) => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+  }[m]));
+}
+
 function haversineKm(aLat, aLng, bLat, bLng) {
   const R = 6371;
   const toRad = d => d * Math.PI / 180;
@@ -237,54 +347,8 @@ function haversineKm(aLat, aLng, bLat, bLng) {
   return 2 * R * Math.asin(Math.sqrt(s1 + s2));
 }
 
-function escapeHtml(str="") {
-  return String(str).replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
-  }[m]));
-}
-
-// Debounce for search
-function debounce(func, wait) {
-  let timeout;
-  return function(...args) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), wait);
-  };
-}
-
 /* =========================
-   Price Display
-========================= */
-function formatPriceDisplay(s) {
-  const minTier = (s.price_tier_min || "").trim();
-  const maxTier = (s.price_tier_max || "").trim();
-  const rawRange = (s.price_range_hkd || "").trim(); 
-
-  // 1. Tier ($)
-  let tierText = "";
-  if (minTier && maxTier) {
-    if (minTier === maxTier) tierText = minTier;
-    else tierText = (minTier.length < maxTier.length) ? `${minTier}-${maxTier}` : `${maxTier}-${minTier}`;
-  } else {
-    tierText = (minTier || maxTier);
-  }
-
-  // 2. HKD Range
-  let rangeText = "";
-  if (rawRange) {
-    const cleanRange = rawRange.replace(/HKD/i, "").replace(/–/g, "－").replace(/-/g, "－").trim();
-    rangeText = `HKD${cleanRange}`;
-  }
-
-  // 3. Combine
-  if (tierText && rangeText) return `${tierText}（${rangeText}）`;
-  if (tierText) return tierText;
-  if (rangeText) return rangeText;
-  return "";
-}
-
-/* =========================
-   Search Synonyms (Typos)
+   ✅ EN/ZH District Synonyms
 ========================= */
 const DISTRICT_SYNONYMS = [
   { en: ["laichikok", "lai chi kok", "laichilok", "lai chi lok", "lck"], zh: ["荔枝角"] },
@@ -305,104 +369,96 @@ function expandQueryVariants(q) {
   const vars = new Set([n]);
 
   for (const item of DISTRICT_SYNONYMS) {
-    const allKeywords = [...item.en, ...item.zh];
-    const isHit = allKeywords.some(k => n.includes(norm(k)));
-    if (isHit) {
-      allKeywords.forEach(k => vars.add(norm(k)));
-    }
+    const enHit = item.en.some(k => n.includes(norm(k)));
+    const zhHit = item.zh.some(z => n.includes(norm(z)));
+    if (enHit) item.zh.forEach(z => vars.add(norm(z)));
+    if (zhHit) item.en.forEach(k => vars.add(norm(k)));
   }
   return [...vars];
 }
 
 /* =========================
-   Data & State
+   ✅ Favorites (localStorage)
 ========================= */
-let SALONS = [];
-let state = {
-  q: "",
-  activeTags: new Set(),
-  nearMeMode: false,
-  userLoc: null,
-  requireCoords: false,
-};
-let pageSize = 60;
-let page = 1;
-
-// Favorites
 const FAV_KEY = "nailmap_favs_v1";
 function getFavSet() {
-  try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); } catch { return new Set(); }
+  try {
+    const arr = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch { return new Set(); }
 }
-function saveFavSet(set) { localStorage.setItem(FAV_KEY, JSON.stringify([...set])); }
-
-/* =========================
-   Map Init
-========================= */
-const defaultCenter = [22.3369, 114.1476];
-const defaultZoom = 12;
-
-const mapDesktop = L.map("mapDesktop", { zoomControl: false }).setView(defaultCenter, defaultZoom);
-const mapMobile  = L.map("mapMobile",  { zoomControl: false }).setView(defaultCenter, defaultZoom);
-
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapDesktop);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapMobile);
-
-const layerDesktop = L.layerGroup().addTo(mapDesktop);
-const layerMobile  = L.layerGroup().addTo(mapMobile);
-
-let userMarkerDesktop = null;
-let userMarkerMobile  = null;
-
-function setUserMarker(lat, lng) {
-  if (userMarkerDesktop) layerDesktop.removeLayer(userMarkerDesktop);
-  if (userMarkerMobile)  layerMobile.removeLayer(userMarkerMobile);
-  
-  const opt = { radius: 8, weight: 2, fillOpacity: 0.25 };
-  userMarkerDesktop = L.circleMarker([lat,lng], opt).addTo(layerDesktop).bindPopup("你而家位置");
-  userMarkerMobile  = L.circleMarker([lat,lng], opt).addTo(layerMobile).bindPopup("你而家位置");
+function saveFavSet(set) {
+  localStorage.setItem(FAV_KEY, JSON.stringify([...set]));
 }
 
 /* =========================
-   ✅ UPDATE: Robust Normalization
+   ✅ Data + Validation
 ========================= */
-function normalizeSalon(raw) {
-  // Try multiple naming conventions
-  const getVal = (keys) => {
-    for (const k of keys) {
-      if (raw[k] !== undefined && raw[k] !== null && raw[k] !== "") return raw[k];
+let SALONS = [];
+let VALIDATION = { errors: [], warnings: [] };
+
+function validateSalons(rows) {
+  const errors = [];
+  const warnings = [];
+  const seen = new Set();
+
+  const allowedLocationTypes = new Set([
+    "Building","Mall","Street","Home","Studio","Pop-up","Academy","Other",
+    "商廈","商場","街舖","住宅","工作室","快閃","學院","其他"
+  ]);
+
+  rows.forEach((s, idx) => {
+    const rowNum = idx + 2;
+    const id = String(s.id || "").trim();
+    if (!id) errors.push({ row: rowNum, type: "missing_id" });
+    if (id) {
+      if (seen.has(id)) errors.push({ row: rowNum, type: "duplicate_id", id });
+      seen.add(id);
     }
-    return "";
-  };
 
+    const lt = String(s.location_type || "").trim();
+    if (lt && !allowedLocationTypes.has(lt)) {
+      warnings.push({ row: rowNum, type: "bad_location_type", location_type: lt });
+    }
+  });
+
+  return { errors, warnings };
+}
+
+function normalizeSalon(raw) {
   const s = { ...raw };
 
-  s.id = String(getVal(["id", "ID", "Id"]) || "").trim();
-  s.name = String(getVal(["name", "Name", "shop_name"]) || "").trim();
-  s.district = String(getVal(["district", "District"]) || "").trim();
-  s.district_en = String(getVal(["district_en", "districtEn", "District En"]) || "").trim();
+  s.id = String(s.id || "").trim();
+  s.name = String(s.name || "").trim();
+  s.district = String(s.district || "").trim();
+  s.district_en = String(s.district_en || "").trim();
+  s.area_group = String(s.area_group || "").trim();
+  s.location_type = String(s.location_type || "").trim();
 
-  // ✅ Fix: Price fields (check snake_case, camelCase, headers)
-  s.price_tier_min = String(getVal(["price_tier_min", "priceTierMin", "min_price", "Price Tier Min"]) || "").trim();
-  s.price_tier_max = String(getVal(["price_tier_max", "priceTierMax", "max_price", "Price Tier Max"]) || "").trim();
-  s.price_range_hkd = String(getVal(["price_range_hkd", "priceRangeHkd", "priceRange", "price_range", "Price Range HKD"]) || "").trim();
+  s.lat = toNum(s.lat);
+  s.lng = toNum(s.lng);
 
-  s.lat = toNum(getVal(["lat", "latitude", "Lat"]));
-  s.lng = toNum(getVal(["lng", "long", "longitude", "Lng"]));
-  s.tags = splitList(getVal(["tags", "Tags", "Tag"]));
-  s.aliases = splitList(getVal(["aliases", "alias", "Aliases"]));
-  s.address_display = String(getVal(["address_display", "addressDisplay", "address", "Address"]) || "").trim();
-  s.note = String(getVal(["note", "notes", "Note"]) || "").trim();
-  s.source_url = String(getVal(["source_url", "sourceUrl", "url", "Link"]) || "").trim();
-  s.show_updated = toBool(getVal(["show_updated", "showUpdated"]));
-  s.last_verified = String(getVal(["last_verified", "lastVerified"]) || "").trim();
-  s.status = String(getVal(["status", "Status"]) || "").trim().toLowerCase();
+  s.price_tier_min = String(s.price_tier_min || "").trim();
+  s.price_tier_max = String(s.price_tier_max || "").trim();
+  s.price_range_hkd = String(s.price_range_hkd || "").trim();
+
+  s.tags = splitList(s.tags);
+  s.aliases = splitList(s.aliases);
+
+  s.address_display = String(s.address_display || "").trim();
+  s.note = String(s.note || "").trim();
+  s.source_url = String(s.source_url || "").trim();
+
+  s.show_updated = toBool(s.show_updated);
+  s.last_verified = String(s.last_verified || "").trim();
+  s.status = String(s.status || "").trim().toLowerCase();
 
   return s;
 }
 
 function getSearchBlob(s) {
   const fields = [
-    s.id, s.name, s.district, s.district_en,
+    s.id, s.name, s.district, s.district_en, s.area_group,
     s.location_type, s.address_display, s.note, s.source_url,
     ...(s.tags || []), ...(s.aliases || [])
   ];
@@ -416,12 +472,63 @@ function matchesQuery(s, q) {
   return variants.some(v => blob.includes(v));
 }
 
+/* =========================
+   ✅ State
+========================= */
+let state = {
+  q: "",
+  activeTags: new Set(),
+  nearMeMode: false,
+  userLoc: null, // {lat,lng}
+  requireCoords: false,
+};
+
+let pageSize = 60;
+let page = 1;
+
+/* =========================
+   ✅ Leaflet Maps
+========================= */
+const defaultCenter = [22.3369, 114.1476];
+const defaultZoom = 12;
+
+const mapDesktop = L.map("mapDesktop", { zoomControl: false }).setView(defaultCenter, defaultZoom);
+const mapMobile  = L.map("mapMobile",  { zoomControl: false }).setView(defaultCenter, defaultZoom);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap contributors"
+}).addTo(mapDesktop);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "&copy; OpenStreetMap contributors"
+}).addTo(mapMobile);
+
+const layerDesktop = L.layerGroup().addTo(mapDesktop);
+const layerMobile  = L.layerGroup().addTo(mapMobile);
+
+let userMarkerDesktop = null;
+let userMarkerMobile  = null;
+
+function setUserMarker(lat, lng) {
+  if (userMarkerDesktop) layerDesktop.removeLayer(userMarkerDesktop);
+  if (userMarkerMobile)  layerMobile.removeLayer(userMarkerMobile);
+
+  userMarkerDesktop = L.circleMarker([lat,lng], { radius: 8, weight: 2, fillOpacity: 0.25 }).addTo(layerDesktop);
+  userMarkerMobile  = L.circleMarker([lat,lng], { radius: 8, weight: 2, fillOpacity: 0.25 }).addTo(layerMobile);
+
+  const html = "<b>你而家位置</b><br/>（只作附近搜尋用途）";
+  userMarkerDesktop.bindPopup(html);
+  userMarkerMobile.bindPopup(html);
+}
+
+/* =========================
+   ✅ Rendering
+========================= */
 function matchesTags(s, tagsSet) {
   if (tagsSet.size === 0) return true;
-  const itemTags = new Set((s.tags || []).map(t => t.toLowerCase()));
-  for (const tag of tagsSet) {
-    if (!itemTags.has(tag.toLowerCase())) return false;
-  }
+  const t = new Set(s.tags || []);
+  for (const tag of tagsSet) if (!t.has(tag)) return false;
   return true;
 }
 
@@ -436,52 +543,69 @@ function getFiltered() {
   }
 
   if (state.nearMeMode && state.userLoc) {
-    items = items.map(s => {
-      const has = Number.isFinite(s.lat) && Number.isFinite(s.lng);
-      return { ...s, _km: has ? haversineKm(state.userLoc.lat, state.userLoc.lng, s.lat, s.lng) : null };
-    }).sort((a,b) => {
-      if (a._km == null) return 1; if (b._km == null) return -1;
-      return a._km - b._km;
-    });
+    items = items
+      .map(s => {
+        const has = Number.isFinite(s.lat) && Number.isFinite(s.lng);
+        return { ...s, _km: has ? haversineKm(state.userLoc.lat, state.userLoc.lng, s.lat, s.lng) : null };
+      })
+      .sort((a,b) => {
+        if (a._km == null && b._km == null) return 0;
+        if (a._km == null) return 1;
+        if (b._km == null) return -1;
+        return a._km - b._km;
+      });
   }
+
   return items;
 }
 
-/* =========================
-   Render
-========================= */
 function renderList(items) {
   const favs = getFavSet();
   const list = document.getElementById("list");
+
   const shown = items.slice(0, page * pageSize);
 
   list.innerHTML = shown.map(s => {
-    const price = formatPriceDisplay(s);
+    const price = formatPriceDisplay(s); // ✅ now outputs "$-$$ ($300-800)"
     const distance = (state.nearMeMode && state.userLoc && s._km != null)
-      ? `<span class="text-xs font-semibold text-text-subtle">${s._km.toFixed(2)} km</span>` : "";
+      ? `<span class="text-xs font-semibold text-text-subtle">${s._km.toFixed(2)} km</span>`
+      : "";
 
-    const tags = (s.tags || []).slice(0, 5).map(t => 
-      `<span class="px-2 py-1 bg-background-light rounded text-xs font-medium text-text-subtle">${escapeHtml(t)}</span>`
-    ).join("");
+    const tags = (s.tags || []).slice(0, 5).map(t => `
+      <span class="px-2 py-1 bg-background-light rounded text-xs font-medium text-text-subtle">${escapeHtml(t)}</span>
+    `).join("");
+
+    const src = s.source_url
+      ? `<a class="text-xs text-primary-hover hover:underline" href="${s.source_url}" target="_blank" rel="noopener">Source</a>`
+      : `<span class="text-xs text-text-subtle">Source: —</span>`;
+
+    const updated = (s.show_updated && s.last_verified)
+      ? `<span class="text-[11px] text-text-subtle">Updated: ${escapeHtml(s.last_verified)}</span>`
+      : "";
 
     const hasCoords = Number.isFinite(s.lat) && Number.isFinite(s.lng);
     const pinHint = hasCoords ? "（地圖可顯示）" : "（暫無座標，只顯示列表）";
+
     const favOn = favs.has(s.id);
     const heartClass = favOn ? "text-tertiary" : "text-text-subtle";
 
     return `
-      <article data-id="${escapeHtml(s.id)}" class="salonCard group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 cursor-pointer">
+      <article data-id="${escapeHtml(s.id)}"
+        class="salonCard group relative bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 cursor-pointer">
         <div class="flex flex-col gap-3">
           <div class="flex items-start justify-between gap-3">
             <div>
-              <h3 class="text-lg font-extrabold text-text-main leading-tight group-hover:text-primary-hover transition-colors">${escapeHtml(s.name)}</h3>
+              <h3 class="text-lg font-extrabold text-text-main leading-tight group-hover:text-primary-hover transition-colors">
+                ${escapeHtml(s.name)}
+              </h3>
               <p class="text-text-subtle text-sm mt-1">
                 ${escapeHtml(s.district || "—")}
-                ${s.district_en ? ` • ${escapeHtml(s.district_en)}` : ""}
-                ${price ? ` • <span class="font-semibold text-text-main">${escapeHtml(price)}</span>` : ""}
+                ${s.district_en ? ` • <span class="text-text-subtle/80">${escapeHtml(s.district_en)}</span>` : ""}
+                ${price ? ` • <span class="font-semibold">${escapeHtml(price)}</span>` : ""}
               </p>
               <p class="text-[11px] text-text-subtle mt-1">${escapeHtml(pinHint)}</p>
             </div>
+
             <div class="flex flex-col items-end gap-1">
               ${distance}
               <button data-fav="${escapeHtml(s.id)}" class="btnFav p-1.5 bg-white border border-border-subtle rounded-full hover:bg-background-light">
@@ -489,11 +613,27 @@ function renderList(items) {
               </button>
             </div>
           </div>
+
           <div class="flex flex-wrap gap-2">${tags}</div>
+
           <div class="pt-3 border-t border-background-light">
-             <div class="text-sm text-text-main"><span class="material-symbols-outlined align-[-5px] text-[18px] text-text-subtle">location_on</span> ${escapeHtml(s.address_display || "—")}</div>
-             ${s.note ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>` : ""}
-             ${s.source_url ? `<div class="mt-2 text-right"><a href="${s.source_url}" target="_blank" class="text-xs text-primary-hover underline">Source</a></div>` : ""}
+            <div class="text-sm text-text-main">
+              <span class="material-symbols-outlined align-[-5px] text-[18px] text-text-subtle">location_on</span>
+              ${escapeHtml(s.address_display || "—")}
+            </div>
+
+            ${s.note ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>` : ""}
+
+            <div class="mt-2 flex items-center justify-between gap-3">
+              <p class="text-[11px] text-text-subtle flex items-start gap-1.5 leading-snug">
+                <span class="material-symbols-outlined text-[14px] shrink-0 translate-y-[1px]">info</span>
+                商廈/工作室：僅顯示大概位置；到訪地址以店方確認為準
+              </p>
+              <div class="flex flex-col items-end gap-1">
+                ${src}
+                ${updated}
+              </div>
+            </div>
           </div>
         </div>
       </article>
@@ -507,39 +647,56 @@ function renderList(items) {
 function renderMarkers(items) {
   layerDesktop.clearLayers();
   layerMobile.clearLayers();
+
   if (state.userLoc) setUserMarker(state.userLoc.lat, state.userLoc.lng);
 
   const withCoords = items.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
 
   withCoords.forEach(s => {
     const price = formatPriceDisplay(s);
-    const tags = (s.tags || []).slice(0, 4).map(t => 
-      `<span style="display:inline-block;margin:2px 2px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:10px;">${escapeHtml(t)}</span>`
+    const tags = (s.tags || []).slice(0, 6).map(t =>
+      `<span style="display:inline-block;margin:2px 4px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:11px;">${escapeHtml(t)}</span>`
     ).join("");
 
+    const src = s.source_url
+      ? `<div style="margin-top:8px;"><a href="${s.source_url}" target="_blank" rel="noopener" style="color:#E57A85;text-decoration:underline;">Source</a></div>`
+      : "";
+
+    const updated = (s.show_updated && s.last_verified)
+      ? `<div style="margin-top:8px;font-size:11px;color:#99827D;">Updated: ${escapeHtml(s.last_verified)}</div>`
+      : "";
+
     const html = `
-      <div style="min-width:220px;">
+      <div style="min-width:240px;">
         <div style="font-weight:800;font-size:15px;color:#543D37;">${escapeHtml(s.name)}</div>
         <div style="margin-top:4px;font-size:12px;color:#99827D;">
-          ${escapeHtml(s.district)} ${price ? `• <b>${escapeHtml(price)}</b>` : ""}
+          ${escapeHtml(s.district || "—")}
+          ${s.district_en ? ` • ${escapeHtml(s.district_en)}` : ""}
+          ${price ? ` • <b>${escapeHtml(price)}</b>` : ""}
         </div>
-        <div style="margin-top:6px;font-size:13px;">${escapeHtml(s.address_display)}</div>
-        <div style="margin-top:6px;">${tags}</div>
-        ${s.source_url ? `<div style="margin-top:6px;"><a href="${s.source_url}" target="_blank" style="color:#E57A85;">Source</a></div>` : ""}
+        <div style="margin-top:8px;font-size:13px;color:#543D37;">
+          <b>位置（大概）</b>：${escapeHtml(s.address_display || "—")}
+        </div>
+        <div style="margin-top:8px;">${tags}</div>
+        <div style="margin-top:10px;font-size:11px;color:#99827D;">
+          商廈/工作室：僅顯示大概位置；到訪地址以店方確認為準
+        </div>
+        ${src}
+        ${updated}
       </div>
     `;
 
     const m1 = L.marker([s.lat, s.lng]).addTo(layerDesktop).bindPopup(html);
     const m2 = L.marker([s.lat, s.lng]).addTo(layerMobile).bindPopup(html);
-    m1._salonId = s.id; m2._salonId = s.id;
+
+    m1._salonId = s.id;
+    m2._salonId = s.id;
   });
 
   if (withCoords.length > 0) {
-    if (!state.nearMeMode) {
-      const bounds = L.latLngBounds(withCoords.map(s => [s.lat, s.lng]));
-      mapDesktop.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
-      mapMobile.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
-    }
+    const bounds = L.latLngBounds(withCoords.map(s => [s.lat, s.lng]));
+    mapDesktop.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
+    mapMobile.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
   }
 }
 
@@ -550,7 +707,103 @@ function syncAll() {
 }
 
 /* =========================
-   Events
+   ✅ Load from API
+========================= */
+async function loadFromSheet() {
+  document.getElementById("bannerError").classList.add("hidden");
+  document.getElementById("bannerWarn").classList.add("hidden");
+
+  const res = await fetch(API_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error("Fetch failed: " + res.status);
+
+  const data = await res.json();
+
+  // ✅ 支援：{salons:[...]} 或 {data:[...]} 或直接 array
+  let rows = data;
+  let v = { errors: [], warnings: [] };
+
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    if (Array.isArray(data.salons)) rows = data.salons;
+    else if (Array.isArray(data.data)) rows = data.data;
+
+    if (Array.isArray(data.errors) || Array.isArray(data.warnings)) {
+      v.errors = Array.isArray(data.errors) ? data.errors : [];
+      v.warnings = Array.isArray(data.warnings) ? data.warnings : [];
+    }
+  }
+
+  if (!Array.isArray(rows)) throw new Error("API did not return an array");
+
+  const normalized = rows.map(normalizeSalon);
+
+  const localV = validateSalons(normalized);
+  VALIDATION = {
+    errors: (v.errors.length ? v.errors : localV.errors),
+    warnings: (v.warnings.length ? v.warnings : localV.warnings),
+  };
+
+  SALONS = normalized;
+
+  if (VALIDATION.warnings.length > 0 || VALIDATION.errors.length > 0) {
+    console.warn("Errors:", VALIDATION.errors);
+    console.warn("Warnings:", VALIDATION.warnings);
+
+    const w = VALIDATION.warnings.slice(0, 8).map(x => `row ${x.row}: ${x.type} (${x.location_type || ""})`).join("； ");
+    const e = VALIDATION.errors.slice(0, 3).map(x => `row ${x.row}: ${x.type} (${x.id || ""})`).join("； ");
+
+    document.getElementById("bannerWarn").classList.remove("hidden");
+    document.getElementById("warnText").textContent =
+      (e ? `Errors: ${e}. ` : "") + (w ? `Warnings: ${w}${VALIDATION.warnings.length>8 ? "…" : ""}` : "");
+  }
+
+  page = 1;
+  syncAll();
+}
+
+function showFetchError(err) {
+  console.error(err);
+  document.getElementById("bannerError").classList.remove("hidden");
+}
+
+/* =========================
+   ✅ Geolocation (Near Me)
+========================= */
+function requireHttpsForGeo() {
+  const ok = location.protocol === "https:" || location.hostname === "localhost";
+  if (!ok) {
+    alert("Near Me 需要 HTTPS 才可定位。你而家可能用緊 file:// 或 http://。請用 Netlify / https 網址開。");
+  }
+  return ok;
+}
+
+function requestGeolocation() {
+  if (!requireHttpsForGeo()) return;
+
+  if (!navigator.geolocation) {
+    alert("你的瀏覽器不支援定位功能。");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      state.userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      state.nearMeMode = true;
+
+      setUserMarker(state.userLoc.lat, state.userLoc.lng);
+      mapDesktop.setView([state.userLoc.lat, state.userLoc.lng], 15);
+      mapMobile.setView([state.userLoc.lat, state.userLoc.lng], 15);
+
+      syncAll();
+    },
+    (err) => {
+      console.warn(err);
+      alert("未能取得你的位置（可能未授權定位 / 網絡 / 非 HTTPS）。");
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 20000 }
+  );
+}
+
+/* =========================
+   ✅ Events
 ========================= */
 function setQuery(q) {
   state.q = q || "";
@@ -558,41 +811,28 @@ function setQuery(q) {
   syncAll();
 }
 
-const handleSearch = debounce((e) => setQuery(e.target.value), 300);
-document.getElementById("qTop").addEventListener("input", handleSearch);
-document.getElementById("qMobile").addEventListener("input", handleSearch);
+document.getElementById("qTop").addEventListener("input", e => setQuery(e.target.value));
+document.getElementById("qMobile").addEventListener("input", e => setQuery(e.target.value));
 
 document.querySelectorAll(".tagChip").forEach(btn => {
   btn.addEventListener("click", () => {
     const tag = btn.getAttribute("data-tag");
     const active = state.activeTags.has(tag);
-    if (active) state.activeTags.delete(tag); else state.activeTags.add(tag);
-    
+    if (active) state.activeTags.delete(tag);
+    else state.activeTags.add(tag);
+
     btn.classList.toggle("border-primary", !active);
     btn.classList.toggle("text-primary", !active);
     btn.classList.toggle("bg-primary/10", !active);
-    page = 1; 
+
+    page = 1;
     syncAll();
   });
 });
 
-document.getElementById("btnNearMe").addEventListener("click", () => {
-  if (location.protocol !== "https:" && location.hostname !== "localhost") {
-    alert("Near Me 需要 HTTPS。"); return;
-  }
-  if (!navigator.geolocation) return alert("不支援定位");
-  navigator.geolocation.getCurrentPosition(pos => {
-    state.userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    state.nearMeMode = true;
-    setUserMarker(state.userLoc.lat, state.userLoc.lng);
-    mapDesktop.setView([state.userLoc.lat, state.userLoc.lng], 15);
-    mapMobile.setView([state.userLoc.lat, state.userLoc.lng], 15);
-    syncAll();
-  }, err => alert("定位失敗"));
-});
-
-document.getElementById("btnLocateDesktop").addEventListener("click", () => document.getElementById("btnNearMe").click());
-document.getElementById("btnLocateMobile").addEventListener("click", () => document.getElementById("btnNearMe").click());
+document.getElementById("btnNearMe").addEventListener("click", () => requestGeolocation());
+document.getElementById("btnLocateDesktop").addEventListener("click", () => requestGeolocation());
+document.getElementById("btnLocateMobile").addEventListener("click", () => requestGeolocation());
 
 document.getElementById("btnZoomInDesktop").addEventListener("click", () => mapDesktop.zoomIn());
 document.getElementById("btnZoomOutDesktop").addEventListener("click", () => mapDesktop.zoomOut());
@@ -604,19 +844,33 @@ document.getElementById("btnHasCoords").addEventListener("click", (e) => {
   e.currentTarget.classList.toggle("border-primary", state.requireCoords);
   e.currentTarget.classList.toggle("text-primary", state.requireCoords);
   e.currentTarget.classList.toggle("bg-primary/10", state.requireCoords);
-  page = 1; syncAll();
+  page = 1;
+  syncAll();
 });
 
 document.getElementById("btnReset").addEventListener("click", () => {
-  state.q = ""; state.activeTags.clear(); state.nearMeMode = false; state.userLoc = null; state.requireCoords = false; page = 1;
+  state.q = "";
+  state.activeTags.clear();
+  state.nearMeMode = false;
+  state.userLoc = null;
+  state.requireCoords = false;
+  page = 1;
+
   document.getElementById("qTop").value = "";
   document.getElementById("qMobile").value = "";
-  document.querySelectorAll(".tagChip").forEach(btn => btn.classList.remove("border-primary", "text-primary", "bg-primary/10"));
+
+  document.querySelectorAll(".tagChip").forEach(btn => {
+    btn.classList.remove("border-primary", "text-primary", "bg-primary/10");
+  });
+
   document.getElementById("btnHasCoords").classList.remove("border-primary","text-primary","bg-primary/10");
   syncAll();
 });
 
-document.getElementById("btnLoadMore").addEventListener("click", () => { page += 1; syncAll(); });
+document.getElementById("btnLoadMore").addEventListener("click", () => {
+  page += 1;
+  syncAll();
+});
 
 document.getElementById("list").addEventListener("click", (e) => {
   const favBtn = e.target.closest(".btnFav");
@@ -625,86 +879,73 @@ document.getElementById("list").addEventListener("click", (e) => {
     const id = favBtn.getAttribute("data-fav");
     const favs = getFavSet();
     if (favs.has(id)) favs.delete(id); else favs.add(id);
-    saveFavSet(favs); syncAll(); return;
+    saveFavSet(favs);
+    syncAll();
+    return;
   }
+
   const card = e.target.closest(".salonCard");
-  if (card) {
-    const id = card.getAttribute("data-id");
-    const s = SALONS.find(x => x.id === id);
-    if (s && Number.isFinite(s.lat) && Number.isFinite(s.lng)) {
-      mapDesktop.setView([s.lat, s.lng], 17);
-      mapMobile.setView([s.lat, s.lng], 17);
-      layerDesktop.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
-      layerMobile.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
-      if (window.innerWidth < 768) document.getElementById("tabMap").click();
-    } else {
-      alert("此店暫無座標");
-    }
+  if (!card) return;
+  const id = card.getAttribute("data-id");
+  const items = getFiltered();
+  const s = items.find(x => x.id === id);
+  if (!s) return;
+
+  if (!Number.isFinite(s.lat) || !Number.isFinite(s.lng)) {
+    alert("此店暫未有座標，只能顯示列表。你可稍後補 lat/lng。");
+    return;
   }
+
+  mapDesktop.setView([s.lat, s.lng], 16);
+  mapMobile.setView([s.lat, s.lng], 16);
+
+  layerDesktop.eachLayer(layer => { if (layer._salonId === id) layer.openPopup(); });
+  layerMobile.eachLayer(layer => { if (layer._salonId === id) layer.openPopup(); });
 });
 
+/* =========================
+   ✅ Mobile Map/List toggle fix
+========================= */
 const panelList = document.getElementById("panelList");
 const panelMapMobile = document.getElementById("panelMapMobile");
 const tabList = document.getElementById("tabList");
 const tabMap = document.getElementById("tabMap");
 
-tabList.addEventListener("click", () => {
+function showList() {
   panelList.classList.remove("hidden");
   panelMapMobile.classList.add("hidden");
-  tabList.classList.add("bg-text-main","text-white"); tabList.classList.remove("text-text-main");
-  tabMap.classList.remove("bg-text-main","text-white"); tabMap.classList.add("text-text-main");
-});
-
-tabMap.addEventListener("click", () => {
-  panelList.classList.add("hidden");
-  panelMapMobile.classList.remove("hidden");
-  tabMap.classList.add("bg-text-main","text-white"); tabMap.classList.remove("text-text-main");
-  tabList.classList.remove("bg-text-main","text-white"); tabList.classList.add("text-text-main");
-  
-  requestAnimationFrame(() => {
-    mapMobile.invalidateSize();
-    const items = getFiltered().filter(s => Number.isFinite(s.lat));
-    if (items.length) {
-      const bounds = L.latLngBounds(items.map(s => [s.lat, s.lng]));
-      mapMobile.fitBounds(bounds, { padding: [50,50], maxZoom: 16 });
-    }
-  });
-});
-
-window.addEventListener("resize", () => {
-  requestAnimationFrame(() => {
-    mapDesktop.invalidateSize();
-    mapMobile.invalidateSize();
-  });
-});
-
-/* =========================
-   Boot
-========================= */
-async function load() {
-  try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    let rows = Array.isArray(data) ? data : (data.salons || []);
-    
-    // 🛠️ DEBUG: Check console for raw keys
-    if (rows.length > 0) {
-      console.log("🔥 API Raw Data Sample:", rows[0]);
-    }
-
-    SALONS = rows.map(normalizeSalon);
-    
-    const warns = (data.warnings || []);
-    if (warns.length) {
-      document.getElementById("bannerWarn").classList.remove("hidden");
-      document.getElementById("warnText").textContent = `Warnings: ${warns.length} items (Check Console)`;
-      console.warn(warns);
-    }
-    syncAll();
-  } catch (e) { console.error(e); alert("Load failed: " + e.message); }
+  tabList.classList.add("bg-text-main","text-white");
+  tabList.classList.remove("text-text-main");
+  tabMap.classList.remove("bg-text-main","text-white");
+  tabMap.classList.add("text-text-main");
 }
 
-load();
+function showMap() {
+  panelList.classList.add("hidden");
+  panelMapMobile.classList.remove("hidden");
+  tabMap.classList.add("bg-text-main","text-white");
+  tabMap.classList.remove("text-text-main");
+  tabList.classList.remove("bg-text-main","text-white");
+  tabList.classList.add("text-text-main");
+
+  setTimeout(() => {
+    mapMobile.invalidateSize(true);
+    const items = getFiltered().filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
+    if (items.length) {
+      const bounds = L.latLngBounds(items.map(s => [s.lat, s.lng]));
+      mapMobile.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
+    }
+  }, 150);
+}
+
+tabList.addEventListener("click", showList);
+tabMap.addEventListener("click", showMap);
+
+/* =========================
+   ✅ Boot
+========================= */
+loadFromSheet().catch(showFetchError);
+setInterval(() => loadFromSheet().catch(console.error), 5 * 60 * 1000);
 </script>
 </body>
 </html>
