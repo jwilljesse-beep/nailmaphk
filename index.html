@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>NailMap HK</title>
+  <title>NailMap HK (Debug Ver)</title>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script>
@@ -15,7 +15,6 @@
             "primary-hover": "#E57A85",
             tertiary: "#D32F2F",
             "background-light": "#FAF8F6",
-            "background-dark": "#3E2C29",
             "text-main": "#543D37",
             "text-subtle": "#99827D",
             "border-subtle": "#EBDAD4",
@@ -27,684 +26,248 @@
     }
   </script>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: "Plus Jakarta Sans", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #EBDAD4; border-radius: 999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #d4c4b6; }
-    
+    body { font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #EBDAD4; border-radius: 10px; }
     #mapDesktop, #mapMobile { width: 100%; height: 100%; z-index: 1; }
-    
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .leaflet-container { font: inherit; }
   </style>
 </head>
 
 <body class="bg-background-light text-text-main flex flex-col h-dvh overflow-hidden">
   
-  <header class="flex-none z-20 bg-white-overlay border-b border-border-subtle px-5 py-3 lg:px-10">
-    <div class="flex items-center justify-between w-full max-w-[1920px] mx-auto gap-4">
-      <div class="flex items-center gap-3">
-        <div class="size-9 text-primary bg-background-light rounded-full flex items-center justify-center border border-border-subtle">
-          <span class="material-symbols-outlined" style="font-size: 20px;">spa</span>
-        </div>
-        <div class="leading-tight">
-          <div class="text-xl font-extrabold tracking-tight">NailMap HK</div>
-          <div class="text-xs text-text-subtle">香港美甲店資料庫</div>
-        </div>
+  <header class="flex-none z-20 bg-white-overlay border-b border-border-subtle px-4 py-3">
+    <div class="flex items-center gap-3">
+      <div class="size-9 text-primary bg-background-light rounded-full flex items-center justify-center border border-border-subtle">
+        <span class="material-symbols-outlined" style="font-size: 20px;">spa</span>
       </div>
-
-      <div class="hidden md:block w-[560px]">
-        <label class="relative block">
-          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
-          <input id="qTop"
-            class="w-full h-10 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="搜尋：店名／地區（Lai Chi Kok）／Tag…"
-          />
-        </label>
+      <div>
+        <div class="text-lg font-extrabold tracking-tight">NailMap HK</div>
+        <div class="text-[10px] text-text-subtle">香港美甲店資料庫</div>
       </div>
-
-      <div class="hidden"></div>
     </div>
   </header>
 
-  <div class="flex-none md:hidden px-4 pt-4">
-    <div class="flex items-center gap-2 bg-white border border-border-subtle rounded-full p-1 shadow-sm">
-      <button id="tabList" class="flex-1 h-10 rounded-full font-bold text-sm bg-text-main text-white transition-colors">
-        List
-      </button>
-      <button id="tabMap" class="flex-1 h-10 rounded-full font-bold text-sm text-text-main hover:bg-background-light transition-colors">
-        Map
-      </button>
-    </div>
-  </div>
-
-  <main class="flex-1 min-h-0 w-full max-w-[1920px] mx-auto flex overflow-hidden relative">
+  <main class="flex-1 min-h-0 flex overflow-hidden relative">
     
-    <section id="panelList" class="w-full md:w-[55%] xl:w-[50%] h-full bg-background-light relative z-10 shadow-xl md:shadow-none overflow-hidden flex flex-col">
-      <div class="flex-none px-4 md:px-5 py-4 bg-background-light/95 backdrop-blur-sm border-b border-border-subtle flex flex-col gap-3">
-        <label class="relative block md:hidden">
-          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
-          <input id="qMobile"
-            class="w-full h-11 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="搜尋：店名 / 地區 / Tag…"
-          />
-        </label>
-
+    <section id="panelList" class="w-full md:w-[50%] h-full bg-background-light flex flex-col z-10 shadow-xl">
+      <div class="flex-none px-4 py-4 bg-white/80 backdrop-blur border-b border-border-subtle flex flex-col gap-3">
+        <input id="qInput" class="w-full h-11 rounded-xl border border-border-subtle bg-white pl-4 text-sm focus:ring-2 focus:ring-primary/20" placeholder="搜尋：店名 / 地區 / Tag..." />
+        
         <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <button id="btnNearMe"
-            class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-sm">my_location</span>
-            <span class="text-sm font-medium">Near Me</span>
-          </button>
-
-          <button id="btnHasCoords"
-            class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">有地圖座標</span>
-          </button>
-
-          <button data-tag="Soft Gel" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">Soft Gel</span>
-          </button>
-          <button data-tag="Hard Gel" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">Hard Gel</span>
-          </button>
-          <button data-tag="Nail Art" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">Nail Art</span>
-          </button>
-          <button data-tag="Japanese Style" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">Japanese Style</span>
-          </button>
+           <button id="btnNearMe" class="h-8 px-3 rounded-full bg-white border border-border-subtle text-xs font-medium whitespace-nowrap">Near Me</button>
+           <button data-tag="Soft Gel" class="tagChip h-8 px-3 rounded-full bg-white border border-border-subtle text-xs font-medium whitespace-nowrap">Soft Gel</button>
+           <button data-tag="Hard Gel" class="tagChip h-8 px-3 rounded-full bg-white border border-border-subtle text-xs font-medium whitespace-nowrap">Hard Gel</button>
+           <button data-tag="Nail Art" class="tagChip h-8 px-3 rounded-full bg-white border border-border-subtle text-xs font-medium whitespace-nowrap">Nail Art</button>
         </div>
 
-        <div class="flex items-center justify-between">
-          <h1 class="text-text-main text-lg font-extrabold tracking-tight">
-            <span id="countText">—</span> 間結果
-          </h1>
-          <button id="btnReset" class="text-sm text-text-subtle hover:text-text-main inline-flex items-center gap-1">
-            <span class="material-symbols-outlined text-[18px]">restart_alt</span>
-            Reset
+        <div class="flex justify-between items-center text-xs text-text-subtle">
+          <span id="countText">Loading...</span>
+          <button id="btnReset" class="flex items-center gap-1 hover:text-text-main">
+            <span class="material-symbols-outlined text-[16px]">restart_alt</span> Reset
           </button>
         </div>
-
-        <div id="bannerWarn" class="hidden text-sm bg-white border border-border-subtle text-text-main rounded-xl px-4 py-3">
-          <div class="font-bold mb-1">提示</div>
-          <div id="warnText" class="text-text-subtle text-xs"></div>
-        </div>
+        
+        <div id="debugBanner" class="hidden text-[10px] bg-red-50 text-red-600 p-2 rounded"></div>
       </div>
 
-      <div class="flex-1 overflow-y-auto px-4 md:px-5 py-5 overscroll-contain">
-        <div id="list" class="flex flex-col gap-4 max-w-3xl mx-auto"></div>
-        <div class="py-6 text-center">
-          <button id="btnLoadMore" class="text-text-main font-semibold hover:text-primary transition-colors inline-flex items-center gap-1">
-            Load more
-            <span class="material-symbols-outlined">expand_more</span>
-          </button>
-        </div>
-      </div>
+      <div id="list" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 overscroll-contain"></div>
     </section>
 
-    <section class="hidden md:block md:w-[45%] xl:w-[50%] h-full relative">
-      <div class="absolute inset-0" id="mapDesktop"></div>
-      <div class="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
-        <button id="btnLocateDesktop" class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
-          <span class="material-symbols-outlined">my_location</span>
-        </button>
-        <div class="flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
-          <button id="btnZoomInDesktop" class="p-2 text-text-subtle hover:text-text-main transition-colors border-b border-gray-100">
-            <span class="material-symbols-outlined">add</span>
-          </button>
-          <button id="btnZoomOutDesktop" class="p-2 text-text-subtle hover:text-text-main transition-colors">
-            <span class="material-symbols-outlined">remove</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section id="panelMapMobile" class="md:hidden hidden w-full h-full relative">
-      <div class="absolute inset-0" id="mapMobile"></div>
-      
-      <div class="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
-        <button id="btnLocateMobile" class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
-          <span class="material-symbols-outlined">my_location</span>
-        </button>
-        <div class="flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
-          <button id="btnZoomInMobile" class="p-2 text-text-subtle hover:text-text-main transition-colors border-b border-gray-100">
-            <span class="material-symbols-outlined">add</span>
-          </button>
-          <button id="btnZoomOutMobile" class="p-2 text-text-subtle hover:text-text-main transition-colors">
-            <span class="material-symbols-outlined">remove</span>
-          </button>
-        </div>
-      </div>
+    <section class="hidden md:block md:w-[50%] h-full relative">
+      <div id="mapDesktop"></div>
     </section>
   </main>
 
 <script>
 /* =========================
-   CONFIG
+   1. CONFIG
 ========================= */
+// 請確認這是你最新的 Web App URL
 const API_URL = "https://script.google.com/macros/s/AKfycbwOFC2Dj31_WGgI2C0S7RGr74ueVQ3Z3rkEIzoFtW12El_VMgW-afwGAToEZrKLEnyh2A/exec";
 
 /* =========================
-   Helpers
+   2. CORE LOGIC
 ========================= */
-function norm(str) {
-  return String(str || "")
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
-function splitList(v) {
-  if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean);
-  const s = String(v || "").trim();
-  if (!s) return [];
-  return s.split(",").map(x => x.trim()).filter(Boolean);
-}
-
-function toBool(v) {
-  const s = String(v || "").toLowerCase().trim();
-  return s === "yes" || s === "true" || s === "1";
-}
-
-function toNum(v) {
-  if (v === "" || v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function haversineKm(aLat, aLng, bLat, bLng) {
-  const R = 6371;
-  const toRad = d => d * Math.PI / 180;
-  const dLat = toRad(bLat - aLat);
-  const dLng = toRad(bLng - aLng);
-  const s1 = Math.sin(dLat/2) ** 2;
-  const s2 = Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * (Math.sin(dLng/2) ** 2);
-  return 2 * R * Math.asin(Math.sqrt(s1 + s2));
-}
-
-function escapeHtml(str="") {
-  return String(str).replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
-  }[m]));
-}
-
-// Debounce for search
-function debounce(func, wait) {
-  let timeout;
-  return function(...args) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), wait);
-  };
-}
-
-/* =========================
-   Price Display
-========================= */
-function formatPriceDisplay(s) {
-  const minTier = (s.price_tier_min || "").trim();
-  const maxTier = (s.price_tier_max || "").trim();
-  const rawRange = (s.price_range_hkd || "").trim(); 
-
-  // 1. Tier ($)
-  let tierText = "";
-  if (minTier && maxTier) {
-    if (minTier === maxTier) tierText = minTier;
-    else tierText = (minTier.length < maxTier.length) ? `${minTier}-${maxTier}` : `${maxTier}-${minTier}`;
-  } else {
-    tierText = (minTier || maxTier);
+// Robust Field Reader (這是修正的關鍵)
+// 它會嘗試讀取各種可能的欄位名稱
+function getVal(obj, keys) {
+  for (const k of keys) {
+    if (obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== "") {
+      return String(obj[k]).trim();
+    }
   }
-
-  // 2. HKD Range
-  let rangeText = "";
-  if (rawRange) {
-    const cleanRange = rawRange.replace(/HKD/i, "").replace(/–/g, "－").replace(/-/g, "－").trim();
-    rangeText = `HKD${cleanRange}`;
-  }
-
-  // 3. Combine
-  if (tierText && rangeText) return `${tierText}（${rangeText}）`;
-  if (tierText) return tierText;
-  if (rangeText) return rangeText;
   return "";
 }
 
-/* =========================
-   Search Synonyms (Typos)
-========================= */
-const DISTRICT_SYNONYMS = [
-  { en: ["laichikok", "lai chi kok", "laichilok", "lai chi lok", "lck"], zh: ["荔枝角"] },
-  { en: ["cheungshawan", "cheung sha wan", "changshawan", "csw"], zh: ["長沙灣"] },
-  { en: ["shamshuipo", "sham shui po", "ssp"], zh: ["深水埗"] },
-  { en: ["mongkok", "mong kok", "mk"], zh: ["旺角"] },
-  { en: ["tsimshatsui", "tsim sha tsui", "tst"], zh: ["尖沙咀"] },
-  { en: ["causewaybay", "causeway bay", "cwb"], zh: ["銅鑼灣"] },
-  { en: ["wanchai", "wan chai"], zh: ["灣仔"] },
-  { en: ["central"], zh: ["中環"] },
-  { en: ["sheungwan", "sheung wan"], zh: ["上環"] },
-];
-
-function expandQueryVariants(q) {
-  const raw = String(q || "");
-  const n = norm(raw);
-  if (!n) return [];
-  const vars = new Set([n]);
-
-  for (const item of DISTRICT_SYNONYMS) {
-    const allKeywords = [...item.en, ...item.zh];
-    const isHit = allKeywords.some(k => n.includes(norm(k)));
-    if (isHit) {
-      allKeywords.forEach(k => vars.add(norm(k)));
-    }
-  }
-  return [...vars];
-}
-
-/* =========================
-   Data & State
-========================= */
-let SALONS = [];
-let state = {
-  q: "",
-  activeTags: new Set(),
-  nearMeMode: false,
-  userLoc: null,
-  requireCoords: false,
-};
-let pageSize = 60;
-let page = 1;
-
-// Favorites
-const FAV_KEY = "nailmap_favs_v1";
-function getFavSet() {
-  try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); } catch { return new Set(); }
-}
-function saveFavSet(set) { localStorage.setItem(FAV_KEY, JSON.stringify([...set])); }
-
-/* =========================
-   Map Init
-========================= */
-const defaultCenter = [22.3369, 114.1476];
-const defaultZoom = 12;
-
-const mapDesktop = L.map("mapDesktop", { zoomControl: false }).setView(defaultCenter, defaultZoom);
-const mapMobile  = L.map("mapMobile",  { zoomControl: false }).setView(defaultCenter, defaultZoom);
-
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapDesktop);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapMobile);
-
-const layerDesktop = L.layerGroup().addTo(mapDesktop);
-const layerMobile  = L.layerGroup().addTo(mapMobile);
-
-let userMarkerDesktop = null;
-let userMarkerMobile  = null;
-
-function setUserMarker(lat, lng) {
-  if (userMarkerDesktop) layerDesktop.removeLayer(userMarkerDesktop);
-  if (userMarkerMobile)  layerMobile.removeLayer(userMarkerMobile);
-  
-  const opt = { radius: 8, weight: 2, fillOpacity: 0.25 };
-  userMarkerDesktop = L.circleMarker([lat,lng], opt).addTo(layerDesktop).bindPopup("你而家位置");
-  userMarkerMobile  = L.circleMarker([lat,lng], opt).addTo(layerMobile).bindPopup("你而家位置");
-}
-
-/* =========================
-   ✅ UPDATE: Robust Normalization
-========================= */
 function normalizeSalon(raw) {
-  // Try multiple naming conventions
-  const getVal = (keys) => {
-    for (const k of keys) {
-      if (raw[k] !== undefined && raw[k] !== null && raw[k] !== "") return raw[k];
-    }
-    return "";
-  };
-
   const s = { ...raw };
+  
+  s.id = getVal(raw, ["id", "ID"]);
+  s.name = getVal(raw, ["name", "Name", "shop_name"]);
+  s.district = getVal(raw, ["district", "District"]);
+  s.district_en = getVal(raw, ["district_en", "districtEn"]);
+  
+  // ✅ 價格欄位修正：增加更多可能的 Key
+  s.price_tier_min = getVal(raw, ["price_tier_min", "priceTierMin", "Price Tier Min", "min_price"]);
+  s.price_tier_max = getVal(raw, ["price_tier_max", "priceTierMax", "Price Tier Max", "max_price"]);
+  s.price_range_hkd = getVal(raw, ["price_range_hkd", "priceRangeHkd", "Price Range HKD", "price_range"]);
 
-  s.id = String(getVal(["id", "ID", "Id"]) || "").trim();
-  s.name = String(getVal(["name", "Name", "shop_name"]) || "").trim();
-  s.district = String(getVal(["district", "District"]) || "").trim();
-  s.district_en = String(getVal(["district_en", "districtEn", "District En"]) || "").trim();
-
-  // ✅ Fix: Price fields (check snake_case, camelCase, headers)
-  s.price_tier_min = String(getVal(["price_tier_min", "priceTierMin", "min_price", "Price Tier Min"]) || "").trim();
-  s.price_tier_max = String(getVal(["price_tier_max", "priceTierMax", "max_price", "Price Tier Max"]) || "").trim();
-  s.price_range_hkd = String(getVal(["price_range_hkd", "priceRangeHkd", "priceRange", "price_range", "Price Range HKD"]) || "").trim();
-
-  s.lat = toNum(getVal(["lat", "latitude", "Lat"]));
-  s.lng = toNum(getVal(["lng", "long", "longitude", "Lng"]));
-  s.tags = splitList(getVal(["tags", "Tags", "Tag"]));
-  s.aliases = splitList(getVal(["aliases", "alias", "Aliases"]));
-  s.address_display = String(getVal(["address_display", "addressDisplay", "address", "Address"]) || "").trim();
-  s.note = String(getVal(["note", "notes", "Note"]) || "").trim();
-  s.source_url = String(getVal(["source_url", "sourceUrl", "url", "Link"]) || "").trim();
-  s.show_updated = toBool(getVal(["show_updated", "showUpdated"]));
-  s.last_verified = String(getVal(["last_verified", "lastVerified"]) || "").trim();
-  s.status = String(getVal(["status", "Status"]) || "").trim().toLowerCase();
-
+  s.lat = Number(getVal(raw, ["lat", "Lat"]));
+  s.lng = Number(getVal(raw, ["lng", "Lng"]));
+  
+  // Tags
+  const t = getVal(raw, ["tags", "Tags"]);
+  s.tags = t ? t.split(/[,，]/).map(x => x.trim()).filter(Boolean) : [];
+  
+  s.address_display = getVal(raw, ["address_display", "address"]);
+  s.source_url = getVal(raw, ["source_url", "url"]);
+  
   return s;
 }
 
-function getSearchBlob(s) {
-  const fields = [
-    s.id, s.name, s.district, s.district_en,
-    s.location_type, s.address_display, s.note, s.source_url,
-    ...(s.tags || []), ...(s.aliases || [])
-  ];
-  return norm(fields.join(" "));
-}
+// ✅ 顯示邏輯修正：確保不回傳奇怪的 HKD 字串
+function formatPriceDisplay(s) {
+  const min = s.price_tier_min; // e.g., "$"
+  const max = s.price_tier_max; // e.g., "$$$"
+  const range = s.price_range_hkd; // e.g., "300-800"
 
-function matchesQuery(s, q) {
-  if (!q) return true;
-  const blob = getSearchBlob(s);
-  const variants = expandQueryVariants(q);
-  return variants.some(v => blob.includes(v));
-}
-
-function matchesTags(s, tagsSet) {
-  if (tagsSet.size === 0) return true;
-  const itemTags = new Set((s.tags || []).map(t => t.toLowerCase()));
-  for (const tag of tagsSet) {
-    if (!itemTags.has(tag.toLowerCase())) return false;
-  }
-  return true;
-}
-
-function getFiltered() {
-  let items = SALONS
-    .filter(s => s.status === "active")
-    .filter(s => matchesQuery(s, state.q))
-    .filter(s => matchesTags(s, state.activeTags));
-
-  if (state.requireCoords) {
-    items = items.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
+  // 1. 處理 Tier ($ - $$$)
+  let tier = "";
+  if (min && max) {
+    tier = (min === max) ? min : (min.length < max.length ? `${min}-${max}` : `${max}-${min}`);
+  } else {
+    tier = min || max;
   }
 
-  if (state.nearMeMode && state.userLoc) {
-    items = items.map(s => {
-      const has = Number.isFinite(s.lat) && Number.isFinite(s.lng);
-      return { ...s, _km: has ? haversineKm(state.userLoc.lat, state.userLoc.lng, s.lat, s.lng) : null };
-    }).sort((a,b) => {
-      if (a._km == null) return 1; if (b._km == null) return -1;
-      return a._km - b._km;
+  // 2. 處理 Range (HKD 300-800)
+  let rangeStr = "";
+  if (range) {
+    // 移除現有的 "HKD" 字眼，統一格式
+    const clean = range.replace(/HKD/gi, "").replace(/[-－—]/g, "－").trim();
+    if (clean) rangeStr = `HKD${clean}`;
+  }
+
+  // 3. 組合
+  if (tier && rangeStr) return `${tier}（${rangeStr}）`;
+  if (tier) return tier;
+  if (rangeStr) return rangeStr;
+  
+  return ""; // 沒有價格資料
+}
+
+/* =========================
+   3. RENDERING
+========================= */
+let SALONS = [];
+
+function renderList(items) {
+  const list = document.getElementById("list");
+  
+  // Debug: 印出前 3 筆的價格資料到 Console
+  if (items.length > 0) {
+    console.log("🔍 Debug Pricing (Top 3 Items):");
+    items.slice(0, 3).forEach(s => {
+      console.log(`店名: ${s.name} | Min: ${s.price_tier_min} | Max: ${s.price_tier_max} | Range: ${s.price_range_hkd} | Result: ${formatPriceDisplay(s)}`);
     });
   }
-  return items;
-}
 
-/* =========================
-   Render
-========================= */
-function renderList(items) {
-  const favs = getFavSet();
-  const list = document.getElementById("list");
-  const shown = items.slice(0, page * pageSize);
-
-  list.innerHTML = shown.map(s => {
+  list.innerHTML = items.map(s => {
     const price = formatPriceDisplay(s);
-    const distance = (state.nearMeMode && state.userLoc && s._km != null)
-      ? `<span class="text-xs font-semibold text-text-subtle">${s._km.toFixed(2)} km</span>` : "";
-
-    const tags = (s.tags || []).slice(0, 5).map(t => 
-      `<span class="px-2 py-1 bg-background-light rounded text-xs font-medium text-text-subtle">${escapeHtml(t)}</span>`
-    ).join("");
-
-    const hasCoords = Number.isFinite(s.lat) && Number.isFinite(s.lng);
-    const pinHint = hasCoords ? "（地圖可顯示）" : "（暫無座標，只顯示列表）";
-    const favOn = favs.has(s.id);
-    const heartClass = favOn ? "text-tertiary" : "text-text-subtle";
+    const tags = s.tags.slice(0, 4).map(t => `<span class="bg-gray-100 text-text-subtle text-[10px] px-2 py-1 rounded">${t}</span>`).join("");
+    
+    // 如果有價格，字體加粗顯示；如果無，不顯示
+    const priceHtml = price 
+      ? `<span class="text-text-main font-bold ml-1 text-xs bg-primary/10 px-1.5 py-0.5 rounded">${price}</span>` 
+      : "";
 
     return `
-      <article data-id="${escapeHtml(s.id)}" class="salonCard group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 cursor-pointer">
-        <div class="flex flex-col gap-3">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h3 class="text-lg font-extrabold text-text-main leading-tight group-hover:text-primary-hover transition-colors">${escapeHtml(s.name)}</h3>
-              <p class="text-text-subtle text-sm mt-1">
-                ${escapeHtml(s.district || "—")}
-                ${s.district_en ? ` • ${escapeHtml(s.district_en)}` : ""}
-                ${price ? ` • <span class="font-semibold text-text-main">${escapeHtml(price)}</span>` : ""}
-              </p>
-              <p class="text-[11px] text-text-subtle mt-1">${escapeHtml(pinHint)}</p>
-            </div>
-            <div class="flex flex-col items-end gap-1">
-              ${distance}
-              <button data-fav="${escapeHtml(s.id)}" class="btnFav p-1.5 bg-white border border-border-subtle rounded-full hover:bg-background-light">
-                <span class="material-symbols-outlined ${heartClass}" style="font-size:20px;">favorite</span>
-              </button>
-            </div>
-          </div>
-          <div class="flex flex-wrap gap-2">${tags}</div>
-          <div class="pt-3 border-t border-background-light">
-             <div class="text-sm text-text-main"><span class="material-symbols-outlined align-[-5px] text-[18px] text-text-subtle">location_on</span> ${escapeHtml(s.address_display || "—")}</div>
-             ${s.note ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>` : ""}
-             ${s.source_url ? `<div class="mt-2 text-right"><a href="${s.source_url}" target="_blank" class="text-xs text-primary-hover underline">Source</a></div>` : ""}
-          </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-transparent hover:border-primary/30 transition-all cursor-pointer">
+        <div class="flex justify-between items-start">
+          <h3 class="font-bold text-text-main text-base">${s.name}</h3>
         </div>
-      </article>
-    `;
-  }).join("");
-
-  document.getElementById("countText").textContent = items.length;
-  document.getElementById("btnLoadMore").style.display = (shown.length < items.length) ? "inline-flex" : "none";
-}
-
-function renderMarkers(items) {
-  layerDesktop.clearLayers();
-  layerMobile.clearLayers();
-  if (state.userLoc) setUserMarker(state.userLoc.lat, state.userLoc.lng);
-
-  const withCoords = items.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-
-  withCoords.forEach(s => {
-    const price = formatPriceDisplay(s);
-    const tags = (s.tags || []).slice(0, 4).map(t => 
-      `<span style="display:inline-block;margin:2px 2px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:10px;">${escapeHtml(t)}</span>`
-    ).join("");
-
-    const html = `
-      <div style="min-width:220px;">
-        <div style="font-weight:800;font-size:15px;color:#543D37;">${escapeHtml(s.name)}</div>
-        <div style="margin-top:4px;font-size:12px;color:#99827D;">
-          ${escapeHtml(s.district)} ${price ? `• <b>${escapeHtml(price)}</b>` : ""}
+        
+        <div class="text-xs text-text-subtle mt-1 flex items-center flex-wrap gap-1">
+          <span>${s.district || "—"}</span>
+          ${priceHtml}
         </div>
-        <div style="margin-top:6px;font-size:13px;">${escapeHtml(s.address_display)}</div>
-        <div style="margin-top:6px;">${tags}</div>
-        ${s.source_url ? `<div style="margin-top:6px;"><a href="${s.source_url}" target="_blank" style="color:#E57A85;">Source</a></div>` : ""}
+
+        <div class="flex gap-2 mt-2 flex-wrap">${tags}</div>
+        
+        <div class="mt-3 pt-2 border-t border-gray-100 text-[11px] text-text-subtle">
+           📍 ${s.address_display || "地址不詳"}
+        </div>
       </div>
     `;
-
-    const m1 = L.marker([s.lat, s.lng]).addTo(layerDesktop).bindPopup(html);
-    const m2 = L.marker([s.lat, s.lng]).addTo(layerMobile).bindPopup(html);
-    m1._salonId = s.id; m2._salonId = s.id;
-  });
-
-  if (withCoords.length > 0) {
-    if (!state.nearMeMode) {
-      const bounds = L.latLngBounds(withCoords.map(s => [s.lat, s.lng]));
-      mapDesktop.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
-      mapMobile.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
-    }
-  }
-}
-
-function syncAll() {
-  const items = getFiltered();
-  renderList(items);
-  renderMarkers(items);
-}
-
-/* =========================
-   Events
-========================= */
-function setQuery(q) {
-  state.q = q || "";
-  page = 1;
-  syncAll();
-}
-
-const handleSearch = debounce((e) => setQuery(e.target.value), 300);
-document.getElementById("qTop").addEventListener("input", handleSearch);
-document.getElementById("qMobile").addEventListener("input", handleSearch);
-
-document.querySelectorAll(".tagChip").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const tag = btn.getAttribute("data-tag");
-    const active = state.activeTags.has(tag);
-    if (active) state.activeTags.delete(tag); else state.activeTags.add(tag);
-    
-    btn.classList.toggle("border-primary", !active);
-    btn.classList.toggle("text-primary", !active);
-    btn.classList.toggle("bg-primary/10", !active);
-    page = 1; 
-    syncAll();
-  });
-});
-
-document.getElementById("btnNearMe").addEventListener("click", () => {
-  if (location.protocol !== "https:" && location.hostname !== "localhost") {
-    alert("Near Me 需要 HTTPS。"); return;
-  }
-  if (!navigator.geolocation) return alert("不支援定位");
-  navigator.geolocation.getCurrentPosition(pos => {
-    state.userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    state.nearMeMode = true;
-    setUserMarker(state.userLoc.lat, state.userLoc.lng);
-    mapDesktop.setView([state.userLoc.lat, state.userLoc.lng], 15);
-    mapMobile.setView([state.userLoc.lat, state.userLoc.lng], 15);
-    syncAll();
-  }, err => alert("定位失敗"));
-});
-
-document.getElementById("btnLocateDesktop").addEventListener("click", () => document.getElementById("btnNearMe").click());
-document.getElementById("btnLocateMobile").addEventListener("click", () => document.getElementById("btnNearMe").click());
-
-document.getElementById("btnZoomInDesktop").addEventListener("click", () => mapDesktop.zoomIn());
-document.getElementById("btnZoomOutDesktop").addEventListener("click", () => mapDesktop.zoomOut());
-document.getElementById("btnZoomInMobile").addEventListener("click", () => mapMobile.zoomIn());
-document.getElementById("btnZoomOutMobile").addEventListener("click", () => mapMobile.zoomOut());
-
-document.getElementById("btnHasCoords").addEventListener("click", (e) => {
-  state.requireCoords = !state.requireCoords;
-  e.currentTarget.classList.toggle("border-primary", state.requireCoords);
-  e.currentTarget.classList.toggle("text-primary", state.requireCoords);
-  e.currentTarget.classList.toggle("bg-primary/10", state.requireCoords);
-  page = 1; syncAll();
-});
-
-document.getElementById("btnReset").addEventListener("click", () => {
-  state.q = ""; state.activeTags.clear(); state.nearMeMode = false; state.userLoc = null; state.requireCoords = false; page = 1;
-  document.getElementById("qTop").value = "";
-  document.getElementById("qMobile").value = "";
-  document.querySelectorAll(".tagChip").forEach(btn => btn.classList.remove("border-primary", "text-primary", "bg-primary/10"));
-  document.getElementById("btnHasCoords").classList.remove("border-primary","text-primary","bg-primary/10");
-  syncAll();
-});
-
-document.getElementById("btnLoadMore").addEventListener("click", () => { page += 1; syncAll(); });
-
-document.getElementById("list").addEventListener("click", (e) => {
-  const favBtn = e.target.closest(".btnFav");
-  if (favBtn) {
-    e.stopPropagation();
-    const id = favBtn.getAttribute("data-fav");
-    const favs = getFavSet();
-    if (favs.has(id)) favs.delete(id); else favs.add(id);
-    saveFavSet(favs); syncAll(); return;
-  }
-  const card = e.target.closest(".salonCard");
-  if (card) {
-    const id = card.getAttribute("data-id");
-    const s = SALONS.find(x => x.id === id);
-    if (s && Number.isFinite(s.lat) && Number.isFinite(s.lng)) {
-      mapDesktop.setView([s.lat, s.lng], 17);
-      mapMobile.setView([s.lat, s.lng], 17);
-      layerDesktop.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
-      layerMobile.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
-      if (window.innerWidth < 768) document.getElementById("tabMap").click();
-    } else {
-      alert("此店暫無座標");
-    }
-  }
-});
-
-const panelList = document.getElementById("panelList");
-const panelMapMobile = document.getElementById("panelMapMobile");
-const tabList = document.getElementById("tabList");
-const tabMap = document.getElementById("tabMap");
-
-tabList.addEventListener("click", () => {
-  panelList.classList.remove("hidden");
-  panelMapMobile.classList.add("hidden");
-  tabList.classList.add("bg-text-main","text-white"); tabList.classList.remove("text-text-main");
-  tabMap.classList.remove("bg-text-main","text-white"); tabMap.classList.add("text-text-main");
-});
-
-tabMap.addEventListener("click", () => {
-  panelList.classList.add("hidden");
-  panelMapMobile.classList.remove("hidden");
-  tabMap.classList.add("bg-text-main","text-white"); tabMap.classList.remove("text-text-main");
-  tabList.classList.remove("bg-text-main","text-white"); tabList.classList.add("text-text-main");
+  }).join("");
   
-  requestAnimationFrame(() => {
-    mapMobile.invalidateSize();
-    const items = getFiltered().filter(s => Number.isFinite(s.lat));
-    if (items.length) {
-      const bounds = L.latLngBounds(items.map(s => [s.lat, s.lng]));
-      mapMobile.fitBounds(bounds, { padding: [50,50], maxZoom: 16 });
-    }
-  });
-});
-
-window.addEventListener("resize", () => {
-  requestAnimationFrame(() => {
-    mapDesktop.invalidateSize();
-    mapMobile.invalidateSize();
-  });
-});
+  document.getElementById("countText").textContent = `${items.length} 結果`;
+}
 
 /* =========================
-   Boot
+   4. INIT & FETCH
 ========================= */
 async function load() {
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
-    let rows = Array.isArray(data) ? data : (data.salons || []);
     
-    // 🛠️ DEBUG: Check console for raw keys
-    if (rows.length > 0) {
-      console.log("🔥 API Raw Data Sample:", rows[0]);
+    // 支援 { salons: [] } 或直接 []
+    const rawList = Array.isArray(data) ? data : (data.salons || []);
+    
+    // 檢查 API 是否回傳了價格欄位
+    if (rawList.length > 0) {
+      const first = rawList[0];
+      const hasPriceKey = Object.keys(first).some(k => k.toLowerCase().includes("price"));
+      if (!hasPriceKey) {
+        document.getElementById("debugBanner").textContent = "⚠️ 警告：API 回傳的資料中找不到 'price' 相關欄位。請檢查 Google Script 是否已發布 (New Deployment)。";
+        document.getElementById("debugBanner").classList.remove("hidden");
+        console.warn("API Data Sample:", first);
+      }
     }
 
-    SALONS = rows.map(normalizeSalon);
+    SALONS = rawList.map(normalizeSalon);
+    renderList(SALONS);
     
-    const warns = (data.warnings || []);
-    if (warns.length) {
-      document.getElementById("bannerWarn").classList.remove("hidden");
-      document.getElementById("warnText").textContent = `Warnings: ${warns.length} items (Check Console)`;
-      console.warn(warns);
-    }
-    syncAll();
-  } catch (e) { console.error(e); alert("Load failed: " + e.message); }
+    // 初始化地圖 (簡化版)
+    initMap(SALONS);
+
+  } catch (e) {
+    console.error(e);
+    alert("載入失敗，請看 Console 錯誤訊息");
+  }
 }
 
+// 簡易 Map init，避免前面複雜邏輯干擾
+function initMap(items) {
+  const map = L.map('mapDesktop').setView([22.3369, 114.1476], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  
+  items.filter(s => s.lat && s.lng).forEach(s => {
+    L.circleMarker([s.lat, s.lng], { color: '#EF9FA9', radius: 6 }).addTo(map)
+      .bindPopup(`<b>${s.name}</b><br>${formatPriceDisplay(s)}`);
+  });
+}
+
+// Search Logic
+document.getElementById("qInput").addEventListener("input", (e) => {
+  const v = e.target.value.toLowerCase();
+  const filtered = SALONS.filter(s => 
+    (s.name + s.district + s.tags.join("")).toLowerCase().includes(v)
+  );
+  renderList(filtered);
+});
+
 load();
+
 </script>
 </body>
 </html>
