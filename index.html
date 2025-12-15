@@ -249,7 +249,6 @@
 /* =========================
    ✅ CONFIG
 ========================= */
-// 你提供嘅 Web App exec
 const API_URL = "https://script.google.com/macros/s/AKfycbwOFC2Dj31_WGgI2C0S7RGr74ueVQ3Z3rkEIzoFtW12El_VMgW-afwGAToEZrKLEnyh2A/exec";
 
 /* =========================
@@ -260,7 +259,7 @@ function norm(str) {
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ") // keep CJK
+    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -283,21 +282,45 @@ function toNum(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-function priceTierToNum(t) { return (t || "").trim().length; } // $=1, $$=2...
+/* =========================
+   ✅ Price tier / range (FIXED)
+   - supports "$$" OR numeric "2"
+========================= */
+function tierToNum(v) {
+  const s = String(v ?? "").trim();
+  if (!s) return null;
+
+  if (/^\$+$/.test(s)) return s.length;
+
+  const n = Number(s);
+  if (Number.isFinite(n) && n > 0) return Math.round(n);
+
+  return null;
+}
+
+function numToTier(n) {
+  if (!Number.isFinite(n) || n <= 0) return "";
+  return "$".repeat(Math.min(5, Math.max(1, n)));
+}
 
 function formatPriceDisplay(s) {
-  const minTier = (s.price_tier_min || "").trim();
-  const maxTier = (s.price_tier_max || "").trim();
-  const range = (s.price_range_hkd || "").trim(); // e.g. "300–800"
+  const a = tierToNum(s.price_tier_min);
+  const b = tierToNum(s.price_tier_max);
+  const range = String(s.price_range_hkd || "").trim();
 
   let tierText = "";
-  if (minTier && maxTier) {
-    const a = priceTierToNum(minTier);
-    const b = priceTierToNum(maxTier);
-    if (a === b) tierText = minTier;
-    else tierText = (a < b) ? `${minTier}-${maxTier}` : `${maxTier}-${minTier}`;
-  } else if (minTier || maxTier) {
-    tierText = (minTier || maxTier);
+  if (a != null && b != null) {
+    const minN = Math.min(a, b);
+    const maxN = Math.max(a, b);
+    tierText = (minN === maxN) ? numToTier(minN) : `${numToTier(minN)}-${numToTier(maxN)}`;
+  } else if (a != null || b != null) {
+    tierText = numToTier(a ?? b);
+  }
+
+  // if no tier but has numeric range, still show
+  if (!tierText && range) {
+    const r = range.replace(/–/g, "－").replace(/-/g, "－");
+    return `HKD${r}`;
   }
 
   if (!tierText) return "";
@@ -326,7 +349,6 @@ function haversineKm(aLat, aLng, bLat, bLng) {
 
 /* =========================
    ✅ EN/ZH District Synonyms
-   (包含你提到嘅 "lai chi lok" typo)
 ========================= */
 const DISTRICT_SYNONYMS = [
   { en: ["laichikok", "lai chi kok", "laichilok", "lai chi lok", "lck"], zh: ["荔枝角"] },
@@ -386,7 +408,7 @@ function validateSalons(rows) {
   ]);
 
   rows.forEach((s, idx) => {
-    const rowNum = idx + 2; // assume row1 header
+    const rowNum = idx + 2;
     const id = String(s.id || "").trim();
     if (!id) errors.push({ row: rowNum, type: "missing_id" });
     if (id) {
@@ -429,7 +451,9 @@ function normalizeSalon(raw) {
 
   s.show_updated = toBool(s.show_updated);
   s.last_verified = String(s.last_verified || "").trim();
-  s.status = String(s.status || "").trim().toLowerCase();
+
+  // ✅ FIX: blank status defaults to active
+  s.status = (String(s.status || "").trim().toLowerCase() || "active");
 
   return s;
 }
@@ -457,7 +481,7 @@ let state = {
   q: "",
   activeTags: new Set(),
   nearMeMode: false,
-  userLoc: null, // {lat,lng}
+  userLoc: null,
   requireCoords: false,
 };
 
@@ -467,7 +491,7 @@ let page = 1;
 /* =========================
    ✅ Leaflet Maps (desktop + mobile)
 ========================= */
-const defaultCenter = [22.3369, 114.1476]; // around Lai Chi Kok (safe default)
+const defaultCenter = [22.3369, 114.1476];
 const defaultZoom = 12;
 
 const mapDesktop = L.map("mapDesktop", { zoomControl: false }).setView(defaultCenter, defaultZoom);
@@ -477,6 +501,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "&copy; OpenStreetMap contributors"
 }).addTo(mapDesktop);
+
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "&copy; OpenStreetMap contributors"
@@ -557,7 +582,6 @@ function renderList(items) {
       ? `<a class="text-xs text-primary-hover hover:underline" href="${s.source_url}" target="_blank" rel="noopener">Source</a>`
       : `<span class="text-xs text-text-subtle">Source: —</span>`;
 
-    // show_updated = yes 才顯示 last_verified
     const updated = (s.show_updated && s.last_verified)
       ? `<span class="text-[11px] text-text-subtle">Updated: ${escapeHtml(s.last_verified)}</span>`
       : "";
@@ -672,7 +696,6 @@ function renderMarkers(items) {
     m2._salonId = s.id;
   });
 
-  // fit bounds
   if (withCoords.length > 0) {
     const bounds = L.latLngBounds(withCoords.map(s => [s.lat, s.lng]));
     mapDesktop.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
@@ -687,7 +710,7 @@ function syncAll() {
 }
 
 /* =========================
-   ✅ Load from API
+   ✅ Load from API (FIXED non-JSON)
 ========================= */
 async function loadFromSheet() {
   document.getElementById("bannerError").classList.add("hidden");
@@ -696,9 +719,15 @@ async function loadFromSheet() {
   const res = await fetch(API_URL, { cache: "no-store" });
   if (!res.ok) throw new Error("Fetch failed: " + res.status);
 
-  const data = await res.json();
+  // ✅ FIX: apps script might return HTML with 200 OK
+  const rawText = await res.text();
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch {
+    throw new Error("API returned non-JSON response (likely HTML error). First 120 chars: " + rawText.slice(0,120));
+  }
 
-  // 支援：API 回傳 {salons:[...], errors:[...], warnings:[...]} 或直接 array
   let rows = data;
   let v = { errors: [], warnings: [] };
 
@@ -714,7 +743,6 @@ async function loadFromSheet() {
 
   const normalized = rows.map(normalizeSalon);
 
-  // 若 API 未提供 validation，就前端自己驗一次（幫你揾 duplicate_id / bad_location_type）
   const localV = validateSalons(normalized);
   VALIDATION = {
     errors: (v.errors.length ? v.errors : localV.errors),
@@ -723,7 +751,6 @@ async function loadFromSheet() {
 
   SALONS = normalized;
 
-  // 顯示 warnings（errors 只放 console，避免嚇走用戶）
   if (VALIDATION.warnings.length > 0 || VALIDATION.errors.length > 0) {
     console.warn("Errors:", VALIDATION.errors);
     console.warn("Warnings:", VALIDATION.warnings);
@@ -736,7 +763,6 @@ async function loadFromSheet() {
       (e ? `Errors: ${e}. ` : "") + (w ? `Warnings: ${w}${VALIDATION.warnings.length>8 ? "…" : ""}` : "");
   }
 
-  // reset paging
   page = 1;
   syncAll();
 }
@@ -750,7 +776,6 @@ function showFetchError(err) {
    ✅ Geolocation (Near Me)
 ========================= */
 function requireHttpsForGeo() {
-  // iOS/Chrome 都多數要求 https (file:// / http:// 會 fail)
   const ok = location.protocol === "https:" || location.hostname === "localhost";
   if (!ok) {
     alert("Near Me 需要 HTTPS 才可定位。你而家可能用緊 file:// 或 http://。請用 Netlify / https 網址開。");
@@ -803,7 +828,6 @@ document.querySelectorAll(".tagChip").forEach(btn => {
     if (active) state.activeTags.delete(tag);
     else state.activeTags.add(tag);
 
-    // toggle UI
     btn.classList.toggle("border-primary", !active);
     btn.classList.toggle("text-primary", !active);
     btn.classList.toggle("bg-primary/10", !active);
@@ -856,7 +880,6 @@ document.getElementById("btnLoadMore").addEventListener("click", () => {
   syncAll();
 });
 
-// Fav toggle
 document.getElementById("list").addEventListener("click", (e) => {
   const favBtn = e.target.closest(".btnFav");
   if (favBtn) {
@@ -876,13 +899,11 @@ document.getElementById("list").addEventListener("click", (e) => {
   const s = items.find(x => x.id === id);
   if (!s) return;
 
-  // 若無座標，就唔跳 map，只係提示
   if (!Number.isFinite(s.lat) || !Number.isFinite(s.lng)) {
     alert("此店暫未有座標，只能顯示列表。你可稍後補 lat/lng。");
     return;
   }
 
-  // focus both maps
   mapDesktop.setView([s.lat, s.lng], 16);
   mapMobile.setView([s.lat, s.lng], 16);
 
@@ -891,8 +912,7 @@ document.getElementById("list").addEventListener("click", (e) => {
 });
 
 /* =========================
-   ✅ Mobile Map/List toggle fix
-   (Leaflet needs invalidateSize after container becomes visible)
+   ✅ Mobile Map/List toggle fix (STRONGER)
 ========================= */
 const panelList = document.getElementById("panelList");
 const panelMapMobile = document.getElementById("panelMapMobile");
@@ -916,16 +936,17 @@ function showMap() {
   tabList.classList.remove("bg-text-main","text-white");
   tabList.classList.add("text-text-main");
 
-  // ✅ critical fix
-  setTimeout(() => {
-    mapMobile.invalidateSize(true);
-    // 若有 marker，fit 一下
-    const items = getFiltered().filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-    if (items.length) {
-      const bounds = L.latLngBounds(items.map(s => [s.lat, s.lng]));
-      mapMobile.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
-    }
-  }, 150);
+  // ✅ strongest iOS fix: double rAF then invalidateSize
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      mapMobile.invalidateSize(true);
+      const items = getFiltered().filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
+      if (items.length) {
+        const bounds = L.latLngBounds(items.map(s => [s.lat, s.lng]));
+        mapMobile.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
+      }
+    });
+  });
 }
 
 tabList.addEventListener("click", showList);
@@ -935,9 +956,8 @@ tabMap.addEventListener("click", showMap);
    ✅ Boot
 ========================= */
 loadFromSheet().catch(showFetchError);
-
-// 每 5 分鐘自動刷新一次（可改／可刪）
 setInterval(() => loadFromSheet().catch(console.error), 5 * 60 * 1000);
 </script>
 </body>
 </html>
+
