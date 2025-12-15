@@ -42,7 +42,6 @@
     ::-webkit-scrollbar-thumb { background: #EBDAD4; border-radius: 999px; }
     ::-webkit-scrollbar-thumb:hover { background: #d4c4b6; }
     
-    /* Map containers need explicit checks, but flex handles size now */
     #mapDesktop, #mapMobile { width: 100%; height: 100%; z-index: 1; }
     
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -254,8 +253,7 @@ function debounce(func, wait) {
 }
 
 /* =========================
-   ✅ Fix 3: Price Display
-   Format: $-$$ (HKD300-800)
+   Price Display
 ========================= */
 function formatPriceDisplay(s) {
   const minTier = (s.price_tier_min || "").trim();
@@ -286,8 +284,7 @@ function formatPriceDisplay(s) {
 }
 
 /* =========================
-   ✅ Fix 2: Search Synonyms (Typos)
-   Input "lai chi lok" -> Matches "lai chi kok" / "荔枝角"
+   Search Synonyms (Typos)
 ========================= */
 const DISTRICT_SYNONYMS = [
   { en: ["laichikok", "lai chi kok", "laichilok", "lai chi lok", "lck"], zh: ["荔枝角"] },
@@ -309,10 +306,8 @@ function expandQueryVariants(q) {
 
   for (const item of DISTRICT_SYNONYMS) {
     const allKeywords = [...item.en, ...item.zh];
-    // Check if input matches *any* keyword in this group (including typos)
     const isHit = allKeywords.some(k => n.includes(norm(k)));
     if (isHit) {
-      // Add *all* correct variants to search targets
       allKeywords.forEach(k => vars.add(norm(k)));
     }
   }
@@ -368,36 +363,46 @@ function setUserMarker(lat, lng) {
 }
 
 /* =========================
-   Logic: Normalize & Filter
+   ✅ UPDATE: Robust Normalization
 ========================= */
 function normalizeSalon(raw) {
-  const s = { ...raw };
-  s.id = String(s.id || "").trim();
-  s.name = String(s.name || "").trim();
-  s.district = String(s.district || "").trim();
-  s.district_en = String(s.district_en || "").trim();
-  
-  // ✅ Data Fix: Ensure these are strings
-  s.price_tier_min = String(s.price_tier_min || "").trim();
-  s.price_tier_max = String(s.price_tier_max || "").trim();
-  s.price_range_hkd = String(s.price_range_hkd || "").trim();
+  // Try multiple naming conventions
+  const getVal = (keys) => {
+    for (const k of keys) {
+      if (raw[k] !== undefined && raw[k] !== null && raw[k] !== "") return raw[k];
+    }
+    return "";
+  };
 
-  s.lat = toNum(s.lat);
-  s.lng = toNum(s.lng);
-  s.tags = splitList(s.tags);
-  s.aliases = splitList(s.aliases);
-  s.address_display = String(s.address_display || "").trim();
-  s.note = String(s.note || "").trim();
-  s.source_url = String(s.source_url || "").trim();
-  s.show_updated = toBool(s.show_updated);
-  s.last_verified = String(s.last_verified || "").trim();
-  s.status = String(s.status || "").trim().toLowerCase();
+  const s = { ...raw };
+
+  s.id = String(getVal(["id", "ID", "Id"]) || "").trim();
+  s.name = String(getVal(["name", "Name", "shop_name"]) || "").trim();
+  s.district = String(getVal(["district", "District"]) || "").trim();
+  s.district_en = String(getVal(["district_en", "districtEn", "District En"]) || "").trim();
+
+  // ✅ Fix: Price fields (check snake_case, camelCase, headers)
+  s.price_tier_min = String(getVal(["price_tier_min", "priceTierMin", "min_price", "Price Tier Min"]) || "").trim();
+  s.price_tier_max = String(getVal(["price_tier_max", "priceTierMax", "max_price", "Price Tier Max"]) || "").trim();
+  s.price_range_hkd = String(getVal(["price_range_hkd", "priceRangeHkd", "priceRange", "price_range", "Price Range HKD"]) || "").trim();
+
+  s.lat = toNum(getVal(["lat", "latitude", "Lat"]));
+  s.lng = toNum(getVal(["lng", "long", "longitude", "Lng"]));
+  s.tags = splitList(getVal(["tags", "Tags", "Tag"]));
+  s.aliases = splitList(getVal(["aliases", "alias", "Aliases"]));
+  s.address_display = String(getVal(["address_display", "addressDisplay", "address", "Address"]) || "").trim();
+  s.note = String(getVal(["note", "notes", "Note"]) || "").trim();
+  s.source_url = String(getVal(["source_url", "sourceUrl", "url", "Link"]) || "").trim();
+  s.show_updated = toBool(getVal(["show_updated", "showUpdated"]));
+  s.last_verified = String(getVal(["last_verified", "lastVerified"]) || "").trim();
+  s.status = String(getVal(["status", "Status"]) || "").trim().toLowerCase();
+
   return s;
 }
 
 function getSearchBlob(s) {
   const fields = [
-    s.id, s.name, s.district, s.district_en, s.area_group,
+    s.id, s.name, s.district, s.district_en,
     s.location_type, s.address_display, s.note, s.source_url,
     ...(s.tags || []), ...(s.aliases || [])
   ];
@@ -411,7 +416,6 @@ function matchesQuery(s, q) {
   return variants.some(v => blob.includes(v));
 }
 
-// ✅ Fix 4: Case-insensitive Tags
 function matchesTags(s, tagsSet) {
   if (tagsSet.size === 0) return true;
   const itemTags = new Set((s.tags || []).map(t => t.toLowerCase()));
@@ -531,7 +535,6 @@ function renderMarkers(items) {
   });
 
   if (withCoords.length > 0) {
-    // Only fit bounds if not in Near Me mode (or first load) to avoid annoying jumps
     if (!state.nearMeMode) {
       const bounds = L.latLngBounds(withCoords.map(s => [s.lat, s.lng]));
       mapDesktop.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
@@ -555,7 +558,6 @@ function setQuery(q) {
   syncAll();
 }
 
-// ✅ Fix 5: Debounce Input
 const handleSearch = debounce((e) => setQuery(e.target.value), 300);
 document.getElementById("qTop").addEventListener("input", handleSearch);
 document.getElementById("qMobile").addEventListener("input", handleSearch);
@@ -616,7 +618,6 @@ document.getElementById("btnReset").addEventListener("click", () => {
 
 document.getElementById("btnLoadMore").addEventListener("click", () => { page += 1; syncAll(); });
 
-// Interactions
 document.getElementById("list").addEventListener("click", (e) => {
   const favBtn = e.target.closest(".btnFav");
   if (favBtn) {
@@ -642,7 +643,6 @@ document.getElementById("list").addEventListener("click", (e) => {
   }
 });
 
-// ✅ Fix 6: Mobile Map Toggle & Resize
 const panelList = document.getElementById("panelList");
 const panelMapMobile = document.getElementById("panelMapMobile");
 const tabList = document.getElementById("tabList");
@@ -661,7 +661,6 @@ tabMap.addEventListener("click", () => {
   tabMap.classList.add("bg-text-main","text-white"); tabMap.classList.remove("text-text-main");
   tabList.classList.remove("bg-text-main","text-white"); tabList.classList.add("text-text-main");
   
-  // Critical for map rendering
   requestAnimationFrame(() => {
     mapMobile.invalidateSize();
     const items = getFiltered().filter(s => Number.isFinite(s.lat));
@@ -687,9 +686,14 @@ async function load() {
     const res = await fetch(API_URL);
     const data = await res.json();
     let rows = Array.isArray(data) ? data : (data.salons || []);
+    
+    // 🛠️ DEBUG: Check console for raw keys
+    if (rows.length > 0) {
+      console.log("🔥 API Raw Data Sample:", rows[0]);
+    }
+
     SALONS = rows.map(normalizeSalon);
     
-    // Warnings?
     const warns = (data.warnings || []);
     if (warns.length) {
       document.getElementById("bannerWarn").classList.remove("hidden");
@@ -697,11 +701,10 @@ async function load() {
       console.warn(warns);
     }
     syncAll();
-  } catch (e) { console.error(e); alert("Load failed"); }
+  } catch (e) { console.error(e); alert("Load failed: " + e.message); }
 }
 
 load();
 </script>
 </body>
 </html>
-
