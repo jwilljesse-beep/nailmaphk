@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NailMap HK</title>
 
-  <!-- Tailwind (CDN for quick preview) -->
+  <!-- Tailwind (CDN for preview) -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script>
     tailwind.config = {
@@ -29,29 +29,13 @@
   </script>
 
   <!-- Leaflet -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap"
-    rel="stylesheet"
-  >
-  <link
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200..700&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200..700&display=swap" rel="stylesheet">
 
   <style>
     body { font-family: "Plus Jakarta Sans", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; }
@@ -59,9 +43,9 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #EBDAD4; border-radius: 999px; }
     ::-webkit-scrollbar-thumb:hover { background: #d4c4b6; }
-    #map { width: 100%; height: 100%; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    #map { width: 100%; height: 100%; }
     .leaflet-container { font: inherit; }
   </style>
 </head>
@@ -72,12 +56,11 @@
     <div class="flex items-center justify-between w-full max-w-[1920px] mx-auto gap-4">
       <div class="flex items-center gap-3">
         <div class="size-9 text-primary bg-background-light rounded-full flex items-center justify-center border border-border-subtle">
-          <!-- Logo placeholder (你遲啲畀我 PNG/SVG 我再換) -->
           <span class="material-symbols-outlined" style="font-size: 20px;">spa</span>
         </div>
         <div class="leading-tight">
           <div class="text-xl font-extrabold tracking-tight">NailMap HK</div>
-          <div class="text-xs text-text-subtle">資料以公開來源整理｜商廈/工作室只顯示大概位置</div>
+          <div class="text-xs text-text-subtle">附近搜尋好用＋資料可信（只顯示大概位置）</div>
         </div>
       </div>
 
@@ -86,18 +69,18 @@
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
           <input id="qTop"
             class="w-full h-10 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="Search salons, districts, keywords…（荔枝角 / lai chi kok 都得）"
+            placeholder="Search salons / districts / keywords…（中英文都得）"
           />
         </label>
       </div>
 
-      <!-- Hidden for now -->
-      <div class="flex items-center gap-3">
+      <!-- 暫時隱藏 -->
+      <div class="hidden items-center gap-3">
         <button class="hidden lg:flex items-center gap-2 text-sm font-semibold text-text-main hover:text-primary transition-colors">
           For Businesses
         </button>
-        <div class="hidden h-6 w-px bg-border-subtle lg:block"></div>
-        <button class="hidden items-center justify-center rounded-xl h-10 px-4 bg-white border border-border-subtle hover:bg-background-light text-text-main gap-2 text-sm font-bold transition-colors">
+        <div class="h-6 w-px bg-border-subtle hidden lg:block"></div>
+        <button class="flex items-center justify-center rounded-xl h-10 px-4 bg-white border border-border-subtle hover:bg-background-light text-text-main gap-2 text-sm font-bold transition-colors">
           <span class="material-symbols-outlined" style="font-size: 20px;">account_circle</span>
           <span class="hidden sm:inline">Log In</span>
         </button>
@@ -105,17 +88,25 @@
     </div>
   </header>
 
+  <!-- Mobile Map/List toggle -->
+  <div class="md:hidden px-5 pt-4">
+    <div class="inline-flex rounded-full border border-border-subtle bg-white p-1 shadow-sm">
+      <button id="tabList" class="px-4 py-2 rounded-full text-sm font-bold bg-text-main text-white">List</button>
+      <button id="tabMap" class="px-4 py-2 rounded-full text-sm font-bold text-text-main">Map</button>
+    </div>
+  </div>
+
   <!-- Main -->
-  <main class="h-[calc(100vh-64px)] w-full max-w-[1920px] mx-auto flex overflow-hidden">
-    <!-- Left panel (List) -->
-    <section id="panelList" class="w-full lg:w-[55%] xl:w-[50%] h-full bg-background-light relative z-10 shadow-xl lg:shadow-none overflow-hidden flex flex-col">
+  <main class="h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] w-full max-w-[1920px] mx-auto flex overflow-hidden">
+    <!-- Left panel -->
+    <section id="listWrap" class="w-full lg:w-[55%] xl:w-[50%] h-full bg-background-light relative z-10 shadow-xl lg:shadow-none overflow-hidden flex flex-col">
       <!-- Search + filters -->
       <div class="flex-none px-5 py-4 bg-background-light/95 backdrop-blur-sm border-b border-border-subtle flex flex-col gap-3">
         <label class="relative block md:hidden">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
           <input id="qMobile"
             class="w-full h-11 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="Search salons, districts, keywords…"
+            placeholder="Search…（中英文都得）"
           />
         </label>
 
@@ -126,39 +117,17 @@
             <span class="text-sm font-medium">Near Me</span>
           </button>
 
-          <button data-tag="Soft Gel"
-            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+          <button data-tag="Soft Gel" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">Soft Gel</span>
           </button>
-
-          <button data-tag="Nail Art"
-            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+          <button data-tag="Hard Gel" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+            <span class="text-sm font-medium">Hard Gel</span>
+          </button>
+          <button data-tag="Nail Art" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">Nail Art</span>
           </button>
-
-          <button data-tag="Japanese Style"
-            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">Japanese Style</span>
-          </button>
-
-          <button data-tag="Eyelash"
-            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">Eyelash</span>
-          </button>
-
-          <button data-tag="$"
-            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">$</span>
-          </button>
-
-          <button data-tag="$$"
-            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">$$</span>
-          </button>
-
-          <button data-tag="$$$"
-            class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
-            <span class="text-sm font-medium">$$$</span>
+          <button data-tag="Home Studio" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+            <span class="text-sm font-medium">Home Studio</span>
           </button>
         </div>
 
@@ -166,8 +135,7 @@
           <h1 class="text-text-main text-lg font-extrabold tracking-tight">
             <span id="countText">—</span> salons
           </h1>
-          <button id="btnReset"
-            class="text-sm text-text-subtle hover:text-text-main inline-flex items-center gap-1">
+          <button id="btnReset" class="text-sm text-text-subtle hover:text-text-main inline-flex items-center gap-1">
             <span class="material-symbols-outlined text-[18px]">restart_alt</span>
             Reset
           </button>
@@ -175,21 +143,17 @@
 
         <p class="text-[11px] text-text-subtle flex items-start gap-1.5 leading-snug">
           <span class="material-symbols-outlined text-[14px] shrink-0 translate-y-[1px]">info</span>
-          商廈/工作室：只顯示大概位置（marker 只作區域參考）；到訪地址以店方確認為準。
+          商廈/工作室：只顯示大概位置；到訪地址以店方確認為準。
         </p>
 
-        <div id="sysBanner" class="hidden rounded-xl border border-border-subtle bg-white px-4 py-3 text-sm">
-          <div class="font-semibold">網站顯示 Sheet 有問題（詳情請開 Console）。網站仍可運作，但建議盡快修正。</div>
-          <div class="text-text-subtle text-xs mt-1" id="sysBannerMeta"></div>
-        </div>
+        <div id="apiStatus" class="text-[11px] text-text-subtle"></div>
       </div>
 
       <!-- List -->
       <div class="flex-1 overflow-y-auto px-4 sm:px-5 py-5">
         <div id="list" class="flex flex-col gap-4 max-w-3xl mx-auto"></div>
         <div class="py-6 text-center">
-          <button id="btnLoadMore"
-            class="text-text-main font-semibold hover:text-primary transition-colors inline-flex items-center gap-1">
+          <button id="btnLoadMore" class="hidden text-text-main font-semibold hover:text-primary transition-colors inline-flex items-center gap-1">
             Load more
             <span class="material-symbols-outlined">expand_more</span>
           </button>
@@ -197,122 +161,82 @@
       </div>
     </section>
 
-    <!-- Right panel (Map) -->
-    <section id="panelMap" class="hidden w-full lg:block lg:w-[45%] xl:w-[50%] h-full relative">
+    <!-- Right panel map (desktop) -->
+    <section class="hidden lg:block lg:w-[45%] xl:w-[50%] h-full relative">
       <div class="absolute inset-0" id="map"></div>
 
-      <!-- Map controls overlay -->
+      <!-- Map controls -->
       <div class="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
-        <button id="btnLocate"
-          class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
+        <button id="btnLocate" class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
           <span class="material-symbols-outlined">my_location</span>
         </button>
-
         <div class="flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
-          <button id="btnZoomIn"
-            class="p-2 text-text-subtle hover:text-text-main transition-colors border-b border-gray-100">
+          <button id="btnZoomIn" class="p-2 text-text-subtle hover:text-text-main transition-colors border-b border-gray-100">
             <span class="material-symbols-outlined">add</span>
           </button>
-          <button id="btnZoomOut"
-            class="p-2 text-text-subtle hover:text-text-main transition-colors">
+          <button id="btnZoomOut" class="p-2 text-text-subtle hover:text-text-main transition-colors">
             <span class="material-symbols-outlined">remove</span>
           </button>
         </div>
       </div>
+    </section>
 
-      <div class="absolute top-4 left-4 z-[1000]">
-        <label class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-md text-sm font-semibold text-text-main select-none">
-          <input id="chkMoveSearch" checked class="form-checkbox rounded text-primary border-gray-300 focus:ring-primary h-4 w-4" type="checkbox" />
-          <span>Auto fit to results</span>
-        </label>
+    <!-- Mobile map wrap -->
+    <section id="mapWrapMobile" class="md:hidden hidden w-full h-full relative">
+      <div class="absolute inset-0" id="mapMobile"></div>
+      <div class="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
+        <button id="btnLocateMobile" class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
+          <span class="material-symbols-outlined">my_location</span>
+        </button>
       </div>
     </section>
   </main>
 
-  <!-- Mobile bottom toggle -->
-  <div class="lg:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-[1200]">
-    <div class="bg-white border border-border-subtle shadow-lg rounded-full flex overflow-hidden">
-      <button id="btnTabList" class="px-5 py-2 text-sm font-semibold text-text-main hover:bg-background-light inline-flex items-center gap-2">
-        <span class="material-symbols-outlined text-[18px]">list</span> List
-      </button>
-      <button id="btnTabMap" class="px-5 py-2 text-sm font-semibold text-text-main hover:bg-background-light inline-flex items-center gap-2 border-l border-border-subtle">
-        <span class="material-symbols-outlined text-[18px]">map</span> Map
-      </button>
-    </div>
-  </div>
-
 <script>
-/* =========================
-   CONFIG
-========================= */
+/* ===============================
+   ✅ API URL (你的 Apps Script /exec)
+=============================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbwOFC2Dj31_WGgI2C0S7RGr74ueVQ3Z3rkEIzoFtW12El_VMgW-afwGAToEZrKLEnyh2A/exec";
-const AUTO_REFRESH_MS = 5 * 60 * 1000;
 
-/* =========================
-   FAVORITES (localStorage)
-========================= */
-const FAV_KEY = "nailmap_favs_v1";
-function loadFavs() {
-  try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); }
-  catch { return new Set(); }
-}
-function saveFavs(set) {
-  localStorage.setItem(FAV_KEY, JSON.stringify([...set]));
-}
-let favs = loadFavs();
-
-/* =========================
-   STATE
-========================= */
-let SALONS = []; // from Sheets
+/* ===============================
+   ✅ State & Favorites
+=============================== */
+let SALONS = [];
 let state = {
   q: "",
   activeTags: new Set(),
   userLoc: null,
   nearMeMode: false,
 };
+const FAV_KEY = "nailmap_favs_v1";
+function loadFavs() {
+  try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); } catch(e) { return new Set(); }
+}
+function saveFavs(set) {
+  localStorage.setItem(FAV_KEY, JSON.stringify([...set]));
+}
+let favs = loadFavs();
 
-/* =========================
-   HELPERS
-========================= */
+/* ===============================
+   ✅ Helpers
+=============================== */
 function escapeHtml(str="") {
   return String(str).replace(/[&<>"']/g, (m) => ({
     "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
   }[m]));
 }
 
-function normalizeText(s="") {
+function norm(s="") {
   return String(s)
     .toLowerCase()
-    .replace(/\s+/g, " ")
-    .replace(/[’'"]/g, "")
-    .replace(/[\-_/]+/g, " ")
+    .replace(/[\s\-_/]+/g, "")
+    .replace(/[()（）]/g, "")
     .trim();
 }
 
-function formatDateYYYYMMDD(value) {
-  if (!value) return "";
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) return value.trim();
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function formatPriceLabel(s) {
-  const min = (s.price_tier_min || "").trim();
-  const max = (s.price_tier_max || "").trim();
-  const tier = (min && max) ? `${min}–${max}` : (s.priceTier || "");
-  const range = (s.price_range_hkd || "").trim();
-  const rangeLabel = range ? `（HKD${range}）` : "";
-  return (tier ? tier + " " : "") + rangeLabel;
-}
-
+function toRad(d) { return d * Math.PI / 180; }
 function haversineKm(aLat, aLng, bLat, bLng) {
   const R = 6371;
-  const toRad = (d) => d * Math.PI / 180;
   const dLat = toRad(bLat - aLat);
   const dLng = toRad(bLng - aLng);
   const s1 = Math.sin(dLat/2) ** 2;
@@ -320,276 +244,244 @@ function haversineKm(aLat, aLng, bLat, bLng) {
   return 2 * R * Math.asin(Math.sqrt(s1 + s2));
 }
 
-function matchesQuery(salon, q) {
-  if (!q) return true;
-  const qq = normalizeText(q);
+function priceTierToNum(t) { return (t || "").trim().length; } // $=1, $$=2...
+function formatPriceDisplay(s) {
+  const minTier = (s.price_tier_min || "").trim();
+  const maxTier = (s.price_tier_max || "").trim();
+  const range = (s.price_range_hkd || "").trim(); // e.g. 218–358
 
-  const aliasText = Array.isArray(salon.aliases) ? salon.aliases.join(" ") : (salon.aliases || "");
-  const hay = normalizeText([
-    salon.name,
-    salon.district,
-    salon.district_en || "",
-    salon.addressText,
-    salon.address_en || "",
-    salon.note,
-    salon.priceTier,
-    formatPriceLabel(salon),
-    ...(salon.tags || []),
-    aliasText
-  ].join(" "));
+  let tierText = "";
+  if (minTier && maxTier) {
+    tierText = (priceTierToNum(minTier) <= priceTierToNum(maxTier))
+      ? `${minTier}-${maxTier}`
+      : `${maxTier}-${minTier}`;
+  } else if (minTier || maxTier) {
+    tierText = (minTier || maxTier);
+  }
 
-  return hay.includes(qq);
+  if (!tierText) return "";
+
+  if (range) {
+    // Normalize dash
+    const r = range.replace(/–/g, "－").replace(/-/g, "－");
+    return `${tierText}（HKD${r}）`;
+  }
+  return tierText;
 }
 
-function matchesTags(salon, tagsSet) {
+function getSearchBlob(s) {
+  // 中英文都搜：district + district_en + aliases + tags + address_display + note + name
+  return norm([
+    s.name, s.district, s.district_en, s.area_group,
+    s.location_type, s.address_display, s.note,
+    (s.tags || []).join(" "),
+    (s.aliases || []).join(" "),
+  ].join(" "));
+}
+
+function matchesQuery(s, q) {
+  if (!q) return true;
+  return getSearchBlob(s).includes(norm(q));
+}
+
+function matchesTags(s, tagsSet) {
   if (tagsSet.size === 0) return true;
-  const t = new Set(salon.tags || []);
-  for (const tag of tagsSet) {
-    if (!t.has(tag)) return false;
-  }
+  const t = new Set(s.tags || []);
+  for (const tag of tagsSet) if (!t.has(tag)) return false;
   return true;
+}
+
+/* ===============================
+   ✅ Map (desktop + mobile)
+=============================== */
+let map = null, markerLayer = null, userMarker = null;
+
+function initMap(elId) {
+  const m = L.map(elId, { zoomControl: false }).setView([22.3200, 114.1700], 12);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap contributors"
+  }).addTo(m);
+
+  const layer = L.layerGroup().addTo(m);
+  return { m, layer };
+}
+
+function setUserMarkerOn(layer, lat, lng) {
+  if (userMarker) layer.removeLayer(userMarker);
+  userMarker = L.circleMarker([lat, lng], { radius: 8, weight: 2, fillOpacity: 0.25 }).addTo(layer);
+  userMarker.bindPopup("<b>你而家位置</b><br/>（只作附近搜尋用途）");
+}
+
+/* ===============================
+   ✅ Render
+=============================== */
+function privacyHintByLocationNorm(s) {
+  const normType = (s.location_type_norm || "").trim();
+  if (normType === "Building") return "商廈/工作室：只顯示大概位置；到訪地址以店方確認為準";
+  if (normType === "Mall") return "商場/攤位：以公開地址顯示為主；到訪前請再核實";
+  return "到訪地址以店方確認為準";
 }
 
 function getFiltered() {
   let items = SALONS
+    .filter(s => String(s.status || "").toLowerCase() === "active")
     .filter(s => matchesQuery(s, state.q))
     .filter(s => matchesTags(s, state.activeTags));
 
   if (state.nearMeMode && state.userLoc) {
-    items = items
-      .map(s => {
-        if (s.lat == null || s.lng == null) return { ...s, _km: null };
+    items = items.map(s => {
+      if (typeof s.lat === "number" && typeof s.lng === "number") {
         return { ...s, _km: haversineKm(state.userLoc.lat, state.userLoc.lng, s.lat, s.lng) };
-      })
-      .sort((a,b) => {
-        if (a._km == null && b._km == null) return 0;
-        if (a._km == null) return 1;
-        if (b._km == null) return -1;
-        return a._km - b._km;
-      });
+      }
+      return { ...s, _km: null };
+    }).sort((a,b) => {
+      if (a._km == null && b._km == null) return 0;
+      if (a._km == null) return 1;
+      if (b._km == null) return -1;
+      return a._km - b._km;
+    });
   }
   return items;
 }
 
-/* =========================
-   MAP (Leaflet)
-========================= */
-const map = L.map("map", { zoomControl: false }).setView([22.334, 114.148], 12);
-
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: "&copy; OpenStreetMap contributors"
-}).addTo(map);
-
-const markerLayer = L.layerGroup().addTo(map);
-let userMarker = null;
-
-function setUserMarker(lat, lng) {
-  if (userMarker) markerLayer.removeLayer(userMarker);
-  userMarker = L.circleMarker([lat, lng], {
-    radius: 8,
-    weight: 2,
-    fillOpacity: 0.25
-  }).addTo(markerLayer);
-  userMarker.bindPopup("<b>你而家位置</b><br/>（只作附近搜尋用途）");
-}
-
-function renderMarkers(items) {
-  markerLayer.clearLayers();
-  if (state.userLoc) setUserMarker(state.userLoc.lat, state.userLoc.lng);
-
-  items.forEach(s => {
-    if (s.lat == null || s.lng == null) return; // no marker if no coords
-
-    const m = L.marker([s.lat, s.lng]).addTo(markerLayer);
-
-    const tags = (s.tags || []).slice(0, 6).map(t =>
-      `<span style="display:inline-block;margin:2px 4px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:11px;">${escapeHtml(t)}</span>`
-    ).join("");
-
-    const src = s.sourceUrl
-      ? `<div style="margin-top:8px;"><a href="${s.sourceUrl}" target="_blank" rel="noopener" style="color:#E57A85;text-decoration:underline;">Source</a></div>`
-      : "";
-
-    const price = formatPriceLabel(s);
-
-    m.bindPopup(`
-      <div style="min-width:240px;">
-        <div style="font-weight:800;font-size:15px;color:#543D37;">${escapeHtml(s.name)}</div>
-        <div style="margin-top:4px;font-size:12px;color:#99827D;">${escapeHtml(s.district)} ${price ? " • " + escapeHtml(price) : ""}</div>
-        <div style="margin-top:8px;font-size:13px;color:#543D37;">
-          <b>位置（大概）</b>：${escapeHtml(s.addressText || "—")}
-        </div>
-        <div style="margin-top:8px;">${tags}</div>
-        <div style="margin-top:10px;font-size:11px;color:#99827D;">
-          商廈/工作室：僅顯示大概位置；到訪地址以店方確認為準
-        </div>
-        ${src}
-      </div>
-    `);
-
-    m._salonId = s.id;
-  });
-}
-
-/* =========================
-   LIST RENDER
-========================= */
-function sourceLine(s) {
-  const show = String(s.show_updated || "").toLowerCase().trim() === "yes";
-  const updated = (show && s.lastVerified) ? `Updated: ${s.lastVerified}` : "";
-
-  const src = s.sourceUrl
-    ? `<a class="text-xs text-primary-hover hover:underline" href="${s.sourceUrl}" target="_blank" rel="noopener">Source</a>`
-    : `<span class="text-xs text-text-subtle">Source: —</span>`;
-
-  return `<div class="mt-2 flex items-center justify-end gap-3">
-    ${src}
-    ${updated ? `<span class="text-xs text-text-subtle">${escapeHtml(updated)}</span>` : ``}
-  </div>`;
-}
-
-function privacyNoteByLocationType(locationType) {
-  // locationType already normalized by script, but be defensive
-  const t = String(locationType || "").toLowerCase();
-  if (t === "mall" || t === "street") return "公開地址可列明；到訪地址以店方確認為準";
-  return "商廈/工作室：僅顯示大概位置；到訪地址以店方確認為準";
-}
-
-let listLimit = 60;
 function renderList(items) {
   const list = document.getElementById("list");
-  const showing = items.slice(0, listLimit);
+  const countText = document.getElementById("countText");
+  countText.textContent = items.length;
 
-  list.innerHTML = showing.map(s => {
-    const isFav = favs.has(s.id);
-    const heartClass = isFav ? "text-tertiary" : "text-text-subtle";
-
+  list.innerHTML = items.map(s => {
+    const priceText = formatPriceDisplay(s);
     const distance = (state.nearMeMode && state.userLoc && s._km != null)
       ? `<span class="text-xs font-semibold text-text-subtle">${s._km.toFixed(2)} km</span>`
-      : (state.nearMeMode && state.userLoc && s._km == null)
-        ? `<span class="text-xs font-semibold text-text-subtle">— km</span>`
-        : "";
-
-    const price = formatPriceLabel(s);
+      : "";
 
     const tags = (s.tags || []).slice(0, 6).map(t => `
       <span class="px-2 py-1 bg-background-light rounded text-xs font-medium text-text-subtle">${escapeHtml(t)}</span>
     `).join("");
 
-    const privacy = privacyNoteByLocationType(s.location_type);
+    const showUpdated = String(s.show_updated || "").toLowerCase() === "yes" && s.last_verified
+      ? `<div class="text-[11px] text-text-subtle mt-1">Updated: ${escapeHtml(s.last_verified)}</div>`
+      : "";
+
+    const heartActive = favs.has(s.id);
+    const heartIcon = heartActive ? "favorite" : "favorite_border";
+    const heartCls = heartActive ? "text-tertiary" : "text-text-subtle";
+
+    const source = s.source_url
+      ? `<a class="text-xs text-primary-hover hover:underline" href="${escapeHtml(s.source_url)}" target="_blank" rel="noopener">Source</a>`
+      : `<span class="text-xs text-text-subtle">Source: —</span>`;
 
     return `
       <article data-id="${escapeHtml(s.id)}"
         class="salonCard group relative bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 cursor-pointer">
         <div class="flex flex-col gap-3">
           <div class="flex items-start justify-between gap-3">
-            <div>
-              <h3 class="text-lg font-extrabold text-text-main leading-tight group-hover:text-primary-hover transition-colors">
+            <div class="min-w-0">
+              <h3 class="text-lg font-extrabold text-text-main leading-tight group-hover:text-primary-hover transition-colors truncate">
                 ${escapeHtml(s.name)}
               </h3>
               <p class="text-text-subtle text-sm mt-1">
-                ${escapeHtml(s.district)}${price ? " • " + escapeHtml(price) : ""}
+                ${escapeHtml(s.district || "")}
+                ${s.district_en ? ` • ${escapeHtml(s.district_en)}` : ""}
+                ${priceText ? ` • ${escapeHtml(priceText)}` : ""}
               </p>
+              ${showUpdated}
             </div>
             <div class="flex flex-col items-end gap-1">
               ${distance}
-              <button type="button" class="favBtn p-1.5 bg-white border border-border-subtle rounded-full hover:bg-background-light" data-id="${escapeHtml(s.id)}" aria-label="favorite">
-                <span class="material-symbols-outlined ${heartClass} text-[18px]">favorite</span>
+              <button data-fav="${escapeHtml(s.id)}" class="favBtn p-1.5 bg-white border border-border-subtle rounded-full hover:bg-background-light">
+                <span class="material-symbols-outlined ${heartCls}" style="font-size:20px;">${heartIcon}</span>
               </button>
             </div>
           </div>
 
-          ${tags ? `<div class="flex flex-wrap gap-2">${tags}</div>` : ``}
+          <div class="flex flex-wrap gap-2">${tags}</div>
 
           <div class="pt-3 border-t border-background-light">
             <div class="text-sm text-text-main">
               <span class="material-symbols-outlined align-[-5px] text-[18px] text-text-subtle">location_on</span>
-              ${escapeHtml(s.addressText || "—")}
+              ${escapeHtml(s.address_display || "")}
             </div>
-            ${s.note ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>` : ``}
+            <div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note || "")}</div>
 
-            <p class="text-[11px] text-text-subtle flex items-start gap-1.5 leading-snug mt-2">
-              <span class="material-symbols-outlined text-[14px] shrink-0 translate-y-[1px]">info</span>
-              ${escapeHtml(privacy)}
-            </p>
-
-            ${sourceLine(s)}
+            <div class="mt-2 flex items-start justify-between gap-3">
+              <p class="text-[11px] text-text-subtle flex items-start gap-1.5 leading-snug">
+                <span class="material-symbols-outlined text-[14px] shrink-0 translate-y-[1px]">info</span>
+                ${escapeHtml(privacyHintByLocationNorm(s))}
+              </p>
+              ${source}
+            </div>
           </div>
         </div>
       </article>
     `;
   }).join("");
-
-  document.getElementById("countText").textContent = items.length;
-
-  const btnLoadMore = document.getElementById("btnLoadMore");
-  btnLoadMore.disabled = (listLimit >= items.length);
-  btnLoadMore.style.opacity = btnLoadMore.disabled ? "0.4" : "1";
 }
 
-/* =========================
-   SYNC
-========================= */
+function renderMarkers(items) {
+  if (!map || !markerLayer) return;
+  markerLayer.clearLayers();
+  if (state.userLoc) setUserMarkerOn(markerLayer, state.userLoc.lat, state.userLoc.lng);
+
+  const pts = [];
+
+  items.forEach(s => {
+    if (typeof s.lat !== "number" || typeof s.lng !== "number") return; // ✅ no coords -> no marker
+    pts.push([s.lat, s.lng]);
+
+    const m = L.marker([s.lat, s.lng]).addTo(markerLayer);
+    m._salonId = s.id;
+
+    const priceText = formatPriceDisplay(s);
+    const tags = (s.tags || []).slice(0, 6).map(t =>
+      `<span style="display:inline-block;margin:2px 6px 0 0;padding:2px 8px;border:1px solid #EBDAD4;border-radius:999px;font-size:11px;">${escapeHtml(t)}</span>`
+    ).join("");
+
+    const src = s.source_url
+      ? `<div style="margin-top:8px;"><a href="${escapeHtml(s.source_url)}" target="_blank" rel="noopener" style="color:#E57A85;text-decoration:underline;">Source</a></div>`
+      : "";
+
+    m.bindPopup(`
+      <div style="min-width:240px;">
+        <div style="font-weight:800;font-size:15px;color:#543D37;">${escapeHtml(s.name)}</div>
+        <div style="margin-top:4px;font-size:12px;color:#99827D;">
+          ${escapeHtml(s.district || "")}${s.district_en ? " • " + escapeHtml(s.district_en) : ""}${priceText ? " • " + escapeHtml(priceText) : ""}
+        </div>
+        <div style="margin-top:8px;font-size:13px;color:#543D37;">
+          <b>位置（大概）</b>：${escapeHtml(s.address_display || "")}
+        </div>
+        <div style="margin-top:8px;">${tags}</div>
+        <div style="margin-top:10px;font-size:11px;color:#99827D;">
+          ${escapeHtml(privacyHintByLocationNorm(s))}
+        </div>
+        ${src}
+      </div>
+    `);
+  });
+
+  if (pts.length) {
+    const bounds = L.latLngBounds(pts);
+    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
+  }
+}
+
 function syncAll() {
   const items = getFiltered();
   renderList(items);
   renderMarkers(items);
-
-  const moveSearch = document.getElementById("chkMoveSearch")?.checked;
-  if (moveSearch && items.length > 0) {
-    const pts = items
-      .filter(s => s.lat != null && s.lng != null)
-      .map(s => [s.lat, s.lng]);
-
-    if (pts.length > 0) {
-      const bounds = L.latLngBounds(pts);
-      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
-    }
-  }
 }
 
-/* =========================
-   MOBILE PANEL TOGGLE
-========================= */
-function isMobile() { return window.matchMedia("(max-width: 1023px)").matches; }
-
-function showPanel(which) {
-  const list = document.getElementById("panelList");
-  const mapPanel = document.getElementById("panelMap");
-  if (!isMobile()) return;
-
-  if (which === "map") {
-    list.classList.add("hidden");
-    mapPanel.classList.remove("hidden");
-    mapPanel.classList.add("block");
-
-    // Leaflet needs invalidateSize after becoming visible
-    setTimeout(() => {
-      try {
-        map.invalidateSize(true);
-        setTimeout(() => map.invalidateSize(true), 120);
-      } catch (e) {}
-    }, 80);
-
-  } else {
-    mapPanel.classList.add("hidden");
-    mapPanel.classList.remove("block");
-    list.classList.remove("hidden");
-  }
-}
-
-/* =========================
-   EVENTS
-========================= */
+/* ===============================
+   ✅ Events
+=============================== */
 function setQuery(q) {
   state.q = q || "";
-  listLimit = 60;
   syncAll();
 }
 
-document.getElementById("qTop").addEventListener("input", e => setQuery(e.target.value));
-document.getElementById("qMobile").addEventListener("input", e => setQuery(e.target.value));
+document.getElementById("qTop")?.addEventListener("input", e => setQuery(e.target.value));
+document.getElementById("qMobile")?.addEventListener("input", e => setQuery(e.target.value));
 
 document.querySelectorAll(".tagChip").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -598,52 +490,85 @@ document.querySelectorAll(".tagChip").forEach(btn => {
     if (active) state.activeTags.delete(tag);
     else state.activeTags.add(tag);
 
-    // visual toggle
     btn.classList.toggle("border-primary", !active);
     btn.classList.toggle("text-primary", !active);
     btn.classList.toggle("bg-primary/10", !active);
 
-    listLimit = 60;
     syncAll();
   });
 });
 
-document.getElementById("btnReset").addEventListener("click", () => {
+document.getElementById("btnReset")?.addEventListener("click", () => {
   state.q = "";
   state.activeTags.clear();
   state.nearMeMode = false;
 
-  document.getElementById("qTop").value = "";
-  document.getElementById("qMobile").value = "";
+  const qTop = document.getElementById("qTop");
+  const qMobile = document.getElementById("qMobile");
+  if (qTop) qTop.value = "";
+  if (qMobile) qMobile.value = "";
 
   document.querySelectorAll(".tagChip").forEach(btn => {
     btn.classList.remove("border-primary", "text-primary", "bg-primary/10");
   });
 
-  listLimit = 60;
   syncAll();
 });
 
-document.getElementById("btnLoadMore").addEventListener("click", () => {
-  listLimit += 60;
-  syncAll();
-});
+function requestGeolocation() {
+  console.log("[NearMe] clicked");
 
-// Map controls
-document.getElementById("btnZoomIn").addEventListener("click", () => map.zoomIn());
-document.getElementById("btnZoomOut").addEventListener("click", () => map.zoomOut());
+  if (!window.isSecureContext) {
+    alert("Near Me 需要 HTTPS 才可用。");
+    return;
+  }
+  if (!navigator.geolocation) {
+    alert("你的瀏覽器不支援定位功能。");
+    return;
+  }
 
-// Mobile tabs
-document.getElementById("btnTabList").addEventListener("click", () => showPanel("list"));
-document.getElementById("btnTabMap").addEventListener("click", () => showPanel("map"));
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      state.userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      state.nearMeMode = true;
+      console.log("[NearMe] got location", state.userLoc);
 
-// Favorites + card click
-document.getElementById("list").addEventListener("click", (e) => {
+      if (map && markerLayer) {
+        setUserMarkerOn(markerLayer, state.userLoc.lat, state.userLoc.lng);
+        map.setView([state.userLoc.lat, state.userLoc.lng], 15);
+        // ✅ hidden -> show map needs invalidate
+        setTimeout(() => { try { map.invalidateSize(true); } catch(e) {} }, 350);
+      }
+      syncAll();
+    },
+    (err) => {
+      console.warn("[NearMe] error", err);
+      if (err.code === 1) alert("定位被拒絕。請到 iPhone 設定 → Safari → 位置 → 允許，或網站設定中允許定位。");
+      else if (err.code === 2) alert("未能取得位置（訊號不足或定位服務關閉）。");
+      else alert("未能取得你的位置。");
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+  );
+}
+
+document.getElementById("btnNearMe")?.addEventListener("click", requestGeolocation);
+document.getElementById("btnLocate")?.addEventListener("click", requestGeolocation);
+document.getElementById("btnZoomIn")?.addEventListener("click", () => map && map.zoomIn());
+document.getElementById("btnZoomOut")?.addEventListener("click", () => map && map.zoomOut());
+
+document.getElementById("btnLocateMobile")?.addEventListener("click", requestGeolocation);
+
+document.getElementById("list")?.addEventListener("click", (e) => {
   const favBtn = e.target.closest(".favBtn");
   if (favBtn) {
+    e.preventDefault();
     e.stopPropagation();
-    const id = favBtn.getAttribute("data-id");
-    if (favs.has(id)) favs.delete(id); else favs.add(id);
+    const id = favBtn.getAttribute("data-fav");
+    if (!id) return;
+
+    if (favs.has(id)) favs.delete(id);
+    else favs.add(id);
+
     saveFavs(favs);
     syncAll();
     return;
@@ -655,149 +580,110 @@ document.getElementById("list").addEventListener("click", (e) => {
   const items = getFiltered();
   const s = items.find(x => x.id === id);
   if (!s) return;
-
-  // switch to map on mobile
-  if (isMobile()) showPanel("map");
-
-  // focus map if coordinates exist
-  if (s.lat != null && s.lng != null) {
+  if (typeof s.lat === "number" && typeof s.lng === "number" && map) {
     map.setView([s.lat, s.lng], 16);
-    markerLayer.eachLayer(layer => {
+    markerLayer && markerLayer.eachLayer(layer => {
       if (layer._salonId === id) layer.openPopup();
     });
   } else {
-    // no coords: just open a gentle note
-    alert("呢間店暫未有座標，所以地圖未能標示（list 仍可正常使用）。");
+    alert("呢間店暫未有座標（可先顯示 list，之後再補地圖資料）。");
   }
 });
 
-/* =========================
-   GEOLOCATION
-========================= */
-function requestGeolocation() {
-  if (!navigator.geolocation) {
-    alert("你的瀏覽器不支援定位功能。");
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      state.userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      state.nearMeMode = true;
-      setUserMarker(state.userLoc.lat, state.userLoc.lng);
-      map.setView([state.userLoc.lat, state.userLoc.lng], 15);
+/* ===============================
+   ✅ Mobile tab toggle
+=============================== */
+function setMobileTab(which) {
+  const tabList = document.getElementById("tabList");
+  const tabMap = document.getElementById("tabMap");
+  const listWrap = document.getElementById("listWrap");
+  const mapWrapMobile = document.getElementById("mapWrapMobile");
+
+  if (which === "map") {
+    tabMap.classList.add("bg-text-main","text-white");
+    tabMap.classList.remove("text-text-main");
+    tabList.classList.remove("bg-text-main","text-white");
+    tabList.classList.add("text-text-main");
+
+    listWrap.classList.add("hidden");
+    mapWrapMobile.classList.remove("hidden");
+
+    // lazy init map on mobile container
+    if (!map) {
+      const { m, layer } = initMap("mapMobile");
+      map = m; markerLayer = layer;
+      setTimeout(() => { try { map.invalidateSize(true); } catch(e) {} }, 350);
       syncAll();
-    },
-    (err) => {
-      console.warn(err);
-      alert("未能取得你的位置（可能未授權定位）。");
-    },
-    { enableHighAccuracy: true, timeout: 8000 }
-  );
-}
-document.getElementById("btnNearMe").addEventListener("click", () => requestGeolocation());
-document.getElementById("btnLocate").addEventListener("click", () => requestGeolocation());
-
-/* =========================
-   LOAD DATA FROM SHEETS
-   Supports both:
-   - array (legacy)
-   - { meta, errors, warnings, data } (new script)
-========================= */
-function mapSheetToUI(s) {
-  // Defensively map fields; tolerate missing columns
-  const tags = Array.isArray(s.tags) ? s.tags : [];
-  const aliases = Array.isArray(s.aliases) ? s.aliases : [];
-
-  return {
-    id: String(s.id || "").trim(),
-    name: String(s.name || "").trim(),
-    district: String(s.district || "").trim(),
-    district_en: String(s.district_en || "").trim(),
-    area_group: String(s.area_group || "").trim(),
-    location_type: String(s.location_type || "").trim(),
-    lat: (s.lat === "" || s.lat == null || Number.isNaN(Number(s.lat))) ? null : Number(s.lat),
-    lng: (s.lng === "" || s.lng == null || Number.isNaN(Number(s.lng))) ? null : Number(s.lng),
-
-    price_tier_min: String(s.price_tier_min || "").trim(),
-    price_tier_max: String(s.price_tier_max || "").trim(),
-    price_range_hkd: String(s.price_range_hkd || "").trim(),
-
-    // compatibility:
-    priceTier: String(s.price_tier || s.priceTier || "").trim(),
-
-    tags,
-    aliases,
-    addressText: String(s.address_display || s.addressText || "").trim(),
-    address_en: String(s.address_en || "").trim(),
-    note: String(s.note || "").trim(),
-    sourceUrl: String(s.source_url || s.sourceUrl || "").trim(),
-
-    show_updated: (s.show_updated === true) ? "yes" : String(s.show_updated || "").trim(),
-    lastVerified: formatDateYYYYMMDD(s.last_verified || s.lastVerified || "")
-  };
-}
-
-function showSystemBanner(metaText) {
-  const box = document.getElementById("sysBanner");
-  const meta = document.getElementById("sysBannerMeta");
-  meta.textContent = metaText || "";
-  box.classList.remove("hidden");
-}
-
-async function loadSalonsFromSheet() {
-  const res = await fetch(API_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to load data: " + res.status);
-
-  const json = await res.json();
-
-  let arr = [];
-  let errors = [];
-  let warnings = [];
-
-  if (Array.isArray(json)) {
-    arr = json;
-  } else if (json && Array.isArray(json.data)) {
-    arr = json.data;
-    errors = Array.isArray(json.errors) ? json.errors : [];
-    warnings = Array.isArray(json.warnings) ? json.warnings : [];
-  } else {
-    throw new Error("API response format not recognized");
-  }
-
-  // Console logs for developer
-  if (errors.length) console.error("Errors:", errors);
-  if (warnings.length) console.warn("Warnings:", warnings);
-
-  // Show banner only if errors exist
-  if (errors.length) {
-    showSystemBanner(`Errors: ${errors.length}｜Warnings: ${warnings.length}｜請打開 Console 查看詳情。`);
-  }
-
-  SALONS = arr
-    .map(mapSheetToUI)
-    .filter(s => s.id && s.name); // basic safety
-
-  // If first load, set a reasonable map view to HK
-  if (SALONS.length > 0) {
-    const pts = SALONS.filter(s => s.lat != null && s.lng != null).map(s => [s.lat, s.lng]);
-    if (pts.length > 0) {
-      const bounds = L.latLngBounds(pts);
-      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
+    } else {
+      setTimeout(() => { try { map.invalidateSize(true); } catch(e) {} }, 350);
     }
-  }
+  } else {
+    tabList.classList.add("bg-text-main","text-white");
+    tabList.classList.remove("text-text-main");
+    tabMap.classList.remove("bg-text-main","text-white");
+    tabMap.classList.add("text-text-main");
 
+    mapWrapMobile.classList.add("hidden");
+    listWrap.classList.remove("hidden");
+  }
+}
+
+document.getElementById("tabList")?.addEventListener("click", () => setMobileTab("list"));
+document.getElementById("tabMap")?.addEventListener("click", () => setMobileTab("map"));
+
+/* ===============================
+   ✅ Load data from Sheets API
+=============================== */
+async function loadSalonsFromSheet() {
+  const statusEl = document.getElementById("apiStatus");
+  try {
+    statusEl.textContent = "Loading data…";
+    const res = await fetch(API_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const data = await res.json();
+
+    // API 可能係 array（正常）或 debug object（?debug=1）
+    const arr = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
+
+    SALONS = arr.map(s => ({
+      ...s,
+      // tags/aliases ensure array
+      tags: Array.isArray(s.tags) ? s.tags : [],
+      aliases: Array.isArray(s.aliases) ? s.aliases : [],
+      lat: (s.lat === null || s.lat === "" || typeof s.lat === "undefined") ? null : Number(s.lat),
+      lng: (s.lng === null || s.lng === "" || typeof s.lng === "undefined") ? null : Number(s.lng),
+    }));
+
+    statusEl.textContent = `Loaded ${SALONS.length} active salons.`;
+    syncAll();
+  } catch (err) {
+    console.error(err);
+    if (statusEl) statusEl.textContent = "讀取資料失敗：請檢查 API_URL / 部署權限 / 網絡。";
+    alert("讀取資料失敗：請檢查 Apps Script Web App 部署權限 或 API_URL。");
+  }
+}
+
+/* ===============================
+   ✅ Desktop map init (only on lg+)
+=============================== */
+function initDesktopMapIfNeeded() {
+  const isLg = window.matchMedia("(min-width: 1024px)").matches;
+  if (!isLg) return;
+  if (map) return;
+
+  const { m, layer } = initMap("map");
+  map = m; markerLayer = layer;
   syncAll();
 }
 
-// Initial load
-loadSalonsFromSheet().catch(err => {
-  console.error(err);
-  alert("讀取資料失敗：請檢查 Apps Script Web App 權限或 API_URL。");
-});
+// on load
+initDesktopMapIfNeeded();
+loadSalonsFromSheet();
+window.addEventListener("resize", initDesktopMapIfNeeded);
 
-// Auto refresh
-setInterval(() => loadSalonsFromSheet().catch(console.error), AUTO_REFRESH_MS);
-
+// auto refresh (optional)
+setInterval(() => loadSalonsFromSheet().catch(console.error), 5 * 60 * 1000);
 </script>
 </body>
 </html>
