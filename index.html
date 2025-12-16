@@ -41,9 +41,7 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #EBDAD4; border-radius: 999px; }
     ::-webkit-scrollbar-thumb:hover { background: #d4c4b6; }
-    
     #mapDesktop, #mapMobile { width: 100%; height: 100%; z-index: 1; }
-    
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .leaflet-container { font: inherit; }
@@ -53,8 +51,9 @@
 <body class="bg-background-light text-text-main flex flex-col h-dvh overflow-hidden">
   
   <header class="flex-none z-20 bg-white-overlay border-b border-border-subtle px-5 py-3 lg:px-10">
-    <div class="flex items-center justify-between w-full max-w-[1920px] mx-auto gap-4">
-      <div class="flex items-center gap-3">
+    <div class="flex items-center w-full max-w-[1920px] mx-auto">
+      
+      <div class="flex-1 flex items-center gap-3">
         <div class="size-9 text-primary bg-background-light rounded-full flex items-center justify-center border border-border-subtle">
           <span class="material-symbols-outlined" style="font-size: 20px;">spa</span>
         </div>
@@ -64,28 +63,27 @@
         </div>
       </div>
 
-      <div class="hidden md:block w-[560px]">
+      <div class="hidden md:block w-[560px] mx-4">
         <label class="relative block">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
           <input id="qTop"
-            class="w-full h-10 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            class="w-full h-10 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             placeholder="搜尋：店名／地區（Lai Chi Kok）／Tag…"
           />
         </label>
       </div>
 
-      <div class="hidden"></div>
+      <div class="flex-1 flex justify-end">
+        <div class="hidden"></div> 
+      </div>
+
     </div>
   </header>
 
   <div class="flex-none md:hidden px-4 pt-4">
     <div class="flex items-center gap-2 bg-white border border-border-subtle rounded-full p-1 shadow-sm">
-      <button id="tabList" class="flex-1 h-10 rounded-full font-bold text-sm bg-text-main text-white transition-colors">
-        List
-      </button>
-      <button id="tabMap" class="flex-1 h-10 rounded-full font-bold text-sm text-text-main hover:bg-background-light transition-colors">
-        Map
-      </button>
+      <button id="tabList" class="flex-1 h-10 rounded-full font-bold text-sm bg-text-main text-white transition-colors">List</button>
+      <button id="tabMap" class="flex-1 h-10 rounded-full font-bold text-sm text-text-main hover:bg-background-light transition-colors">Map</button>
     </div>
   </div>
 
@@ -95,22 +93,32 @@
       <div class="flex-none px-4 md:px-5 py-4 bg-background-light/95 backdrop-blur-sm border-b border-border-subtle flex flex-col gap-3">
         <label class="relative block md:hidden">
           <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">search</span>
-          <input id="qMobile"
-            class="w-full h-11 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="搜尋：店名 / 地區 / Tag…"
-          />
+          <input id="qMobile" class="w-full h-11 rounded-xl border border-border-subtle bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="搜尋：店名 / 地區 / Tag…" />
         </label>
 
         <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <button id="btnNearMe"
-            class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+          <button id="btnNearMe" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-sm">my_location</span>
             <span class="text-sm font-medium">Near Me</span>
           </button>
-
-          <button id="btnHasCoords"
-            class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+          <button id="btnHasCoords" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">有地圖座標</span>
+          </button>
+          
+          <button data-tag="$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+            <span class="text-sm font-medium">$</span>
+          </button>
+          <button data-tag="$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+            <span class="text-sm font-medium">$$</span>
+          </button>
+          <button data-tag="$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+            <span class="text-sm font-medium">$$$</span>
+          </button>
+           <button data-tag="$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+            <span class="text-sm font-medium">$$$$</span>
+          </button>
+           <button data-tag="$$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+            <span class="text-sm font-medium">$$$$$</span>
           </button>
 
           <button data-tag="Soft Gel" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
@@ -173,7 +181,6 @@
 
     <section id="panelMapMobile" class="md:hidden hidden w-full h-full relative">
       <div class="absolute inset-0" id="mapMobile"></div>
-      
       <div class="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
         <button id="btnLocateMobile" class="bg-white p-2 rounded-lg shadow-md text-text-subtle hover:text-text-main transition-colors">
           <span class="material-symbols-outlined">my_location</span>
@@ -194,19 +201,14 @@
 /* =========================
    CONFIG
 ========================= */
+// ⚠️ 記得使用最新部署的 GAS URL
 const API_URL = "https://script.google.com/macros/s/AKfycbzIweqyWYjcpMLsFB69d_a-l7RqeDhwpDJDpT_JVSJEUJUKBkRfR-wil4ttqkKlxRkvDg/exec";
 
 /* =========================
    Helpers
 ========================= */
 function norm(str) {
-  return String(str || "")
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return String(str || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function splitList(v) {
@@ -238,12 +240,9 @@ function haversineKm(aLat, aLng, bLat, bLng) {
 }
 
 function escapeHtml(str="") {
-  return String(str).replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
-  }[m]));
+  return String(str).replace(/[&<>"']/g, (m) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;" }[m]));
 }
 
-// Debounce for search
 function debounce(func, wait) {
   let timeout;
   return function(...args) {
@@ -258,9 +257,8 @@ function debounce(func, wait) {
 function formatPriceDisplay(s) {
   const minTier = (s.price_tier_min || "").trim();
   const maxTier = (s.price_tier_max || "").trim();
-  const rawRange = (s.price_range_hkd || "").trim(); 
+  const rawRange = (s.price_range_hkd || "").trim();
 
-  // 1. Tier ($)
   let tierText = "";
   if (minTier && maxTier) {
     if (minTier === maxTier) tierText = minTier;
@@ -269,14 +267,12 @@ function formatPriceDisplay(s) {
     tierText = (minTier || maxTier);
   }
 
-  // 2. HKD Range
   let rangeText = "";
   if (rawRange) {
     const cleanRange = rawRange.replace(/HKD/i, "").replace(/–/g, "－").replace(/-/g, "－").trim();
     rangeText = `HKD${cleanRange}`;
   }
 
-  // 3. Combine
   if (tierText && rangeText) return `${tierText}（${rangeText}）`;
   if (tierText) return tierText;
   if (rangeText) return rangeText;
@@ -284,7 +280,7 @@ function formatPriceDisplay(s) {
 }
 
 /* =========================
-   Search Synonyms (Typos)
+   Search Synonyms
 ========================= */
 const DISTRICT_SYNONYMS = [
   { en: ["laichikok", "lai chi kok", "laichilok", "lai chi lok", "lck"], zh: ["荔枝角"] },
@@ -303,7 +299,6 @@ function expandQueryVariants(q) {
   const n = norm(raw);
   if (!n) return [];
   const vars = new Set([n]);
-
   for (const item of DISTRICT_SYNONYMS) {
     const allKeywords = [...item.en, ...item.zh];
     const isHit = allKeywords.some(k => n.includes(norm(k)));
@@ -318,21 +313,12 @@ function expandQueryVariants(q) {
    Data & State
 ========================= */
 let SALONS = [];
-let state = {
-  q: "",
-  activeTags: new Set(),
-  nearMeMode: false,
-  userLoc: null,
-  requireCoords: false,
-};
+let state = { q: "", activeTags: new Set(), nearMeMode: false, userLoc: null, requireCoords: false };
 let pageSize = 60;
 let page = 1;
 
-// Favorites
 const FAV_KEY = "nailmap_favs_v1";
-function getFavSet() {
-  try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); } catch { return new Set(); }
-}
+function getFavSet() { try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); } catch { return new Set(); } }
 function saveFavSet(set) { localStorage.setItem(FAV_KEY, JSON.stringify([...set])); }
 
 /* =========================
@@ -340,10 +326,8 @@ function saveFavSet(set) { localStorage.setItem(FAV_KEY, JSON.stringify([...set]
 ========================= */
 const defaultCenter = [22.3369, 114.1476];
 const defaultZoom = 12;
-
 const mapDesktop = L.map("mapDesktop", { zoomControl: false }).setView(defaultCenter, defaultZoom);
 const mapMobile  = L.map("mapMobile",  { zoomControl: false }).setView(defaultCenter, defaultZoom);
-
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapDesktop);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapMobile);
 
@@ -352,60 +336,63 @@ const layerMobile  = L.layerGroup().addTo(mapMobile);
 
 let userMarkerDesktop = null;
 let userMarkerMobile  = null;
-
 function setUserMarker(lat, lng) {
   if (userMarkerDesktop) layerDesktop.removeLayer(userMarkerDesktop);
   if (userMarkerMobile)  layerMobile.removeLayer(userMarkerMobile);
-  
   const opt = { radius: 8, weight: 2, fillOpacity: 0.25 };
   userMarkerDesktop = L.circleMarker([lat,lng], opt).addTo(layerDesktop).bindPopup("你而家位置");
   userMarkerMobile  = L.circleMarker([lat,lng], opt).addTo(layerMobile).bindPopup("你而家位置");
 }
 
 /* =========================
-   ✅ UPDATE: Robust Normalization
+   ✅ Smart Robust Normalization
 ========================= */
 function normalizeSalon(raw) {
-  // Try multiple naming conventions
-  const getVal = (keys) => {
-    for (const k of keys) {
-      if (raw[k] !== undefined && raw[k] !== null && raw[k] !== "") return raw[k];
+  const lookup = {};
+  Object.keys(raw).forEach(k => {
+    const cleanKey = k.toString().toLowerCase().replace(/[^a-z0-9]/g, "");
+    lookup[cleanKey] = raw[k];
+  });
+
+  const getVal = (targetKeys) => {
+    for (const t of targetKeys) {
+      const cleanTarget = t.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const val = lookup[cleanTarget];
+      if (val !== undefined && val !== null && String(val) !== "") {
+        return val;
+      }
     }
     return "";
   };
 
-  const s = { ...raw };
+  const s = {}; 
+  s.id = String(getVal(["id"]) || "").trim();
+  s.name = String(getVal(["name", "shop_name"]) || "").trim();
+  s.district = String(getVal(["district"]) || "").trim();
+  s.district_en = String(getVal(["district_en"]) || "").trim();
 
-  s.id = String(getVal(["id", "ID", "Id"]) || "").trim();
-  s.name = String(getVal(["name", "Name", "shop_name"]) || "").trim();
-  s.district = String(getVal(["district", "District"]) || "").trim();
-  s.district_en = String(getVal(["district_en", "districtEn", "District En"]) || "").trim();
+  // Price keys
+  s.price_tier_min = String(getVal(["price_tier_min", "min_price"]) || "").trim();
+  s.price_tier_max = String(getVal(["price_tier_max", "max_price"]) || "").trim();
+  s.price_range_hkd = String(getVal(["price_range_hkd", "price_range"]) || "").trim();
 
-  // ✅ Fix: Price fields (check snake_case, camelCase, headers)
-  s.price_tier_min = String(getVal(["price_tier_min", "priceTierMin", "min_price", "Price Tier Min"]) || "").trim();
-  s.price_tier_max = String(getVal(["price_tier_max", "priceTierMax", "max_price", "Price Tier Max"]) || "").trim();
-  s.price_range_hkd = String(getVal(["price_range_hkd", "priceRangeHkd", "priceRange", "price_range", "Price Range HKD"]) || "").trim();
-
-  s.lat = toNum(getVal(["lat", "latitude", "Lat"]));
-  s.lng = toNum(getVal(["lng", "long", "longitude", "Lng"]));
-  s.tags = splitList(getVal(["tags", "Tags", "Tag"]));
-  s.aliases = splitList(getVal(["aliases", "alias", "Aliases"]));
-  s.address_display = String(getVal(["address_display", "addressDisplay", "address", "Address"]) || "").trim();
-  s.note = String(getVal(["note", "notes", "Note"]) || "").trim();
-  s.source_url = String(getVal(["source_url", "sourceUrl", "url", "Link"]) || "").trim();
-  s.show_updated = toBool(getVal(["show_updated", "showUpdated"]));
-  s.last_verified = String(getVal(["last_verified", "lastVerified"]) || "").trim();
-  s.status = String(getVal(["status", "Status"]) || "").trim().toLowerCase();
+  s.lat = toNum(getVal(["lat", "latitude"]));
+  s.lng = toNum(getVal(["lng", "longitude"]));
+  
+  s.tags = splitList(getVal(["tags"]));
+  s.aliases = splitList(getVal(["aliases"]));
+  s.address_display = String(getVal(["address_display", "address"]) || "").trim();
+  s.note = String(getVal(["note"]) || "").trim();
+  s.source_url = String(getVal(["source_url", "url"]) || "").trim();
+  s.show_updated = toBool(getVal(["show_updated"]));
+  s.last_verified = String(getVal(["last_verified"]) || "").trim();
+  s.status = String(getVal(["status"]) || "").trim().toLowerCase();
 
   return s;
 }
 
 function getSearchBlob(s) {
-  const fields = [
-    s.id, s.name, s.district, s.district_en,
-    s.location_type, s.address_display, s.note, s.source_url,
-    ...(s.tags || []), ...(s.aliases || [])
-  ];
+  const fields = [s.id, s.name, s.district, s.district_en, s.location_type, s.address_display, s.note, s.source_url, ...(s.tags || []), ...(s.aliases || [])];
   return norm(fields.join(" "));
 }
 
@@ -416,25 +403,24 @@ function matchesQuery(s, q) {
   return variants.some(v => blob.includes(v));
 }
 
+// ✅ Filter logic that includes Price Tiers in tags
 function matchesTags(s, tagsSet) {
   if (tagsSet.size === 0) return true;
+  
+  // Combine tags and price tiers into one searchable set
   const itemTags = new Set((s.tags || []).map(t => t.toLowerCase()));
-  for (const tag of tagsSet) {
-    if (!itemTags.has(tag.toLowerCase())) return false;
+  if (s.price_tier_min) itemTags.add(s.price_tier_min.toLowerCase());
+  if (s.price_tier_max) itemTags.add(s.price_tier_max.toLowerCase());
+
+  for (const tag of tagsSet) { 
+    if (!itemTags.has(tag.toLowerCase())) return false; 
   }
   return true;
 }
 
 function getFiltered() {
-  let items = SALONS
-    .filter(s => s.status === "active")
-    .filter(s => matchesQuery(s, state.q))
-    .filter(s => matchesTags(s, state.activeTags));
-
-  if (state.requireCoords) {
-    items = items.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-  }
-
+  let items = SALONS.filter(s => s.status === "active").filter(s => matchesQuery(s, state.q)).filter(s => matchesTags(s, state.activeTags));
+  if (state.requireCoords) items = items.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
   if (state.nearMeMode && state.userLoc) {
     items = items.map(s => {
       const has = Number.isFinite(s.lat) && Number.isFinite(s.lng);
@@ -454,16 +440,11 @@ function renderList(items) {
   const favs = getFavSet();
   const list = document.getElementById("list");
   const shown = items.slice(0, page * pageSize);
-
+  
   list.innerHTML = shown.map(s => {
     const price = formatPriceDisplay(s);
-    const distance = (state.nearMeMode && state.userLoc && s._km != null)
-      ? `<span class="text-xs font-semibold text-text-subtle">${s._km.toFixed(2)} km</span>` : "";
-
-    const tags = (s.tags || []).slice(0, 5).map(t => 
-      `<span class="px-2 py-1 bg-background-light rounded text-xs font-medium text-text-subtle">${escapeHtml(t)}</span>`
-    ).join("");
-
+    const distance = (state.nearMeMode && state.userLoc && s._km != null) ? `<span class="text-xs font-semibold text-text-subtle">${s._km.toFixed(2)} km</span>` : "";
+    const tags = (s.tags || []).slice(0, 5).map(t => `<span class="px-2 py-1 bg-background-light rounded text-xs font-medium text-text-subtle">${escapeHtml(t)}</span>`).join("");
     const hasCoords = Number.isFinite(s.lat) && Number.isFinite(s.lng);
     const pinHint = hasCoords ? "（地圖可顯示）" : "（暫無座標，只顯示列表）";
     const favOn = favs.has(s.id);
@@ -508,38 +489,27 @@ function renderMarkers(items) {
   layerDesktop.clearLayers();
   layerMobile.clearLayers();
   if (state.userLoc) setUserMarker(state.userLoc.lat, state.userLoc.lng);
-
   const withCoords = items.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-
   withCoords.forEach(s => {
     const price = formatPriceDisplay(s);
-    const tags = (s.tags || []).slice(0, 4).map(t => 
-      `<span style="display:inline-block;margin:2px 2px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:10px;">${escapeHtml(t)}</span>`
-    ).join("");
-
+    const tags = (s.tags || []).slice(0, 4).map(t => `<span style="display:inline-block;margin:2px 2px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:10px;">${escapeHtml(t)}</span>`).join("");
     const html = `
       <div style="min-width:220px;">
         <div style="font-weight:800;font-size:15px;color:#543D37;">${escapeHtml(s.name)}</div>
-        <div style="margin-top:4px;font-size:12px;color:#99827D;">
-          ${escapeHtml(s.district)} ${price ? `• <b>${escapeHtml(price)}</b>` : ""}
-        </div>
+        <div style="margin-top:4px;font-size:12px;color:#99827D;">${escapeHtml(s.district)} ${price ? `• <b>${escapeHtml(price)}</b>` : ""}</div>
         <div style="margin-top:6px;font-size:13px;">${escapeHtml(s.address_display)}</div>
         <div style="margin-top:6px;">${tags}</div>
         ${s.source_url ? `<div style="margin-top:6px;"><a href="${s.source_url}" target="_blank" style="color:#E57A85;">Source</a></div>` : ""}
       </div>
     `;
-
     const m1 = L.marker([s.lat, s.lng]).addTo(layerDesktop).bindPopup(html);
     const m2 = L.marker([s.lat, s.lng]).addTo(layerMobile).bindPopup(html);
     m1._salonId = s.id; m2._salonId = s.id;
   });
-
-  if (withCoords.length > 0) {
-    if (!state.nearMeMode) {
-      const bounds = L.latLngBounds(withCoords.map(s => [s.lat, s.lng]));
-      mapDesktop.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
-      mapMobile.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
-    }
+  if (withCoords.length > 0 && !state.nearMeMode) {
+    const bounds = L.latLngBounds(withCoords.map(s => [s.lat, s.lng]));
+    mapDesktop.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
+    mapMobile.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
   }
 }
 
@@ -552,12 +522,7 @@ function syncAll() {
 /* =========================
    Events
 ========================= */
-function setQuery(q) {
-  state.q = q || "";
-  page = 1;
-  syncAll();
-}
-
+function setQuery(q) { state.q = q || ""; page = 1; syncAll(); }
 const handleSearch = debounce((e) => setQuery(e.target.value), 300);
 document.getElementById("qTop").addEventListener("input", handleSearch);
 document.getElementById("qMobile").addEventListener("input", handleSearch);
@@ -567,19 +532,13 @@ document.querySelectorAll(".tagChip").forEach(btn => {
     const tag = btn.getAttribute("data-tag");
     const active = state.activeTags.has(tag);
     if (active) state.activeTags.delete(tag); else state.activeTags.add(tag);
-    
-    btn.classList.toggle("border-primary", !active);
-    btn.classList.toggle("text-primary", !active);
-    btn.classList.toggle("bg-primary/10", !active);
-    page = 1; 
-    syncAll();
+    btn.classList.toggle("border-primary", !active); btn.classList.toggle("text-primary", !active); btn.classList.toggle("bg-primary/10", !active);
+    page = 1; syncAll();
   });
 });
 
 document.getElementById("btnNearMe").addEventListener("click", () => {
-  if (location.protocol !== "https:" && location.hostname !== "localhost") {
-    alert("Near Me 需要 HTTPS。"); return;
-  }
+  if (location.protocol !== "https:" && location.hostname !== "localhost") { alert("Near Me 需要 HTTPS。"); return; }
   if (!navigator.geolocation) return alert("不支援定位");
   navigator.geolocation.getCurrentPosition(pos => {
     state.userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -593,7 +552,6 @@ document.getElementById("btnNearMe").addEventListener("click", () => {
 
 document.getElementById("btnLocateDesktop").addEventListener("click", () => document.getElementById("btnNearMe").click());
 document.getElementById("btnLocateMobile").addEventListener("click", () => document.getElementById("btnNearMe").click());
-
 document.getElementById("btnZoomInDesktop").addEventListener("click", () => mapDesktop.zoomIn());
 document.getElementById("btnZoomOutDesktop").addEventListener("click", () => mapDesktop.zoomOut());
 document.getElementById("btnZoomInMobile").addEventListener("click", () => mapMobile.zoomIn());
@@ -601,16 +559,13 @@ document.getElementById("btnZoomOutMobile").addEventListener("click", () => mapM
 
 document.getElementById("btnHasCoords").addEventListener("click", (e) => {
   state.requireCoords = !state.requireCoords;
-  e.currentTarget.classList.toggle("border-primary", state.requireCoords);
-  e.currentTarget.classList.toggle("text-primary", state.requireCoords);
-  e.currentTarget.classList.toggle("bg-primary/10", state.requireCoords);
+  e.currentTarget.classList.toggle("border-primary", state.requireCoords); e.currentTarget.classList.toggle("text-primary", state.requireCoords); e.currentTarget.classList.toggle("bg-primary/10", state.requireCoords);
   page = 1; syncAll();
 });
 
 document.getElementById("btnReset").addEventListener("click", () => {
   state.q = ""; state.activeTags.clear(); state.nearMeMode = false; state.userLoc = null; state.requireCoords = false; page = 1;
-  document.getElementById("qTop").value = "";
-  document.getElementById("qMobile").value = "";
+  document.getElementById("qTop").value = ""; document.getElementById("qMobile").value = "";
   document.querySelectorAll(".tagChip").forEach(btn => btn.classList.remove("border-primary", "text-primary", "bg-primary/10"));
   document.getElementById("btnHasCoords").classList.remove("border-primary","text-primary","bg-primary/10");
   syncAll();
@@ -621,25 +576,18 @@ document.getElementById("btnLoadMore").addEventListener("click", () => { page +=
 document.getElementById("list").addEventListener("click", (e) => {
   const favBtn = e.target.closest(".btnFav");
   if (favBtn) {
-    e.stopPropagation();
-    const id = favBtn.getAttribute("data-fav");
-    const favs = getFavSet();
+    e.stopPropagation(); const id = favBtn.getAttribute("data-fav"); const favs = getFavSet();
     if (favs.has(id)) favs.delete(id); else favs.add(id);
     saveFavSet(favs); syncAll(); return;
   }
   const card = e.target.closest(".salonCard");
   if (card) {
-    const id = card.getAttribute("data-id");
-    const s = SALONS.find(x => x.id === id);
+    const id = card.getAttribute("data-id"); const s = SALONS.find(x => x.id === id);
     if (s && Number.isFinite(s.lat) && Number.isFinite(s.lng)) {
-      mapDesktop.setView([s.lat, s.lng], 17);
-      mapMobile.setView([s.lat, s.lng], 17);
-      layerDesktop.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
-      layerMobile.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
+      mapDesktop.setView([s.lat, s.lng], 17); mapMobile.setView([s.lat, s.lng], 17);
+      layerDesktop.eachLayer(l => { if (l._salonId === id) l.openPopup(); }); layerMobile.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
       if (window.innerWidth < 768) document.getElementById("tabMap").click();
-    } else {
-      alert("此店暫無座標");
-    }
+    } else { alert("此店暫無座標"); }
   }
 });
 
@@ -649,18 +597,15 @@ const tabList = document.getElementById("tabList");
 const tabMap = document.getElementById("tabMap");
 
 tabList.addEventListener("click", () => {
-  panelList.classList.remove("hidden");
-  panelMapMobile.classList.add("hidden");
+  panelList.classList.remove("hidden"); panelMapMobile.classList.add("hidden");
   tabList.classList.add("bg-text-main","text-white"); tabList.classList.remove("text-text-main");
   tabMap.classList.remove("bg-text-main","text-white"); tabMap.classList.add("text-text-main");
 });
 
 tabMap.addEventListener("click", () => {
-  panelList.classList.add("hidden");
-  panelMapMobile.classList.remove("hidden");
+  panelList.classList.add("hidden"); panelMapMobile.classList.remove("hidden");
   tabMap.classList.add("bg-text-main","text-white"); tabMap.classList.remove("text-text-main");
   tabList.classList.remove("bg-text-main","text-white"); tabList.classList.add("text-text-main");
-  
   requestAnimationFrame(() => {
     mapMobile.invalidateSize();
     const items = getFiltered().filter(s => Number.isFinite(s.lat));
@@ -671,12 +616,7 @@ tabMap.addEventListener("click", () => {
   });
 });
 
-window.addEventListener("resize", () => {
-  requestAnimationFrame(() => {
-    mapDesktop.invalidateSize();
-    mapMobile.invalidateSize();
-  });
-});
+window.addEventListener("resize", () => { requestAnimationFrame(() => { mapDesktop.invalidateSize(); mapMobile.invalidateSize(); }); });
 
 /* =========================
    Boot
@@ -687,9 +627,9 @@ async function load() {
     const data = await res.json();
     let rows = Array.isArray(data) ? data : (data.salons || []);
     
-    // 🛠️ DEBUG: Check console for raw keys
+    // 🛠️ DEBUG: 強制印出 API 資料讓使用者檢查
     if (rows.length > 0) {
-      console.log("🔥 API Raw Data Sample:", rows[0]);
+      console.log("🔥 [DEBUG] API 回傳的第一筆資料:", rows[0]);
     }
 
     SALONS = rows.map(normalizeSalon);
