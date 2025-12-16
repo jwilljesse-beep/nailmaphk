@@ -112,10 +112,10 @@
           <button data-tag="$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">$$$</span>
           </button>
-          <button data-tag="$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+           <button data-tag="$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">$$$$</span>
           </button>
-          <button data-tag="$$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+           <button data-tag="$$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">$$$$$</span>
           </button>
 
@@ -199,41 +199,14 @@
 /* =========================
    CONFIG
 ========================= */
+// ✅ 使用你提供的最新 Script URL
 const API_URL = "https://script.google.com/macros/s/AKfycbzWRh14SK5_MgsyLGGm8V7mu2QsD3r4w1M6ME-0h6tWJJChj2YITcp4tR8xFBzhke1LCg/exec";
-
-/* =========================
-   ✅ Global Safety Nets
-========================= */
-window.addEventListener("unhandledrejection", (e) => {
-  console.warn("Unhandled promise rejection (ignored to keep UI running):", e.reason);
-  // 不阻止 default 行為亦得；但唔想嚇親自己就 keep UI
-});
-window.addEventListener("error", (e) => {
-  // 盡量避免任何小錯導致你以為「乜都冇」
-  console.warn("Window error:", e.message);
-});
-
-/* =========================
-   ✅ Safe Storage Wrapper
-========================= */
-function storageGet(key) {
-  try { return localStorage.getItem(key); } catch { return null; }
-}
-function storageSet(key, val) {
-  try { localStorage.setItem(key, val); } catch { /* ignore */ }
-}
 
 /* =========================
    Helpers
 ========================= */
 function norm(str) {
-  return String(str || "")
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return String(str || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\u4e00-\u9fff]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function splitList(v) {
@@ -276,6 +249,7 @@ function debounce(func, wait) {
   };
 }
 
+// ✅ DATE FORMATTER
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -284,7 +258,7 @@ function formatDate(dateStr) {
 }
 
 /* =========================
-   Price Calculation & Fallback Map
+   Price Calculation
 ========================= */
 const TIER_RANGES = {
   "$": { min: "200以下", max: "199" },
@@ -322,6 +296,7 @@ function formatPriceDisplay(s) {
     let t2 = getTierSymbol(maxP);
     displayTier = (t1 === t2) ? t1 : `${t1}-${t2}`;
     displayRange = (minP === maxP) ? `HKD${minP}` : `HKD${minP}－${maxP}`;
+
   } else {
     let tMin = sheetMinTier || "$";
     let tMax = sheetMaxTier || tMin;
@@ -358,7 +333,9 @@ function expandQueryVariants(q) {
   for (const item of DISTRICT_SYNONYMS) {
     const allKeywords = [...item.en, ...item.zh];
     const isHit = allKeywords.some(k => n.includes(norm(k)));
-    if (isHit) allKeywords.forEach(k => vars.add(norm(k)));
+    if (isHit) {
+      allKeywords.forEach(k => vars.add(norm(k)));
+    }
   }
   return [...vars];
 }
@@ -372,31 +349,16 @@ let pageSize = 60;
 let page = 1;
 
 const FAV_KEY = "nailmap_favs_v1";
-function getFavSet() {
-  try {
-    const raw = storageGet(FAV_KEY);
-    return new Set(JSON.parse(raw || "[]"));
-  } catch {
-    return new Set();
-  }
-}
-function saveFavSet(set) {
-  try {
-    storageSet(FAV_KEY, JSON.stringify([...set]));
-  } catch {
-    // ignore
-  }
-}
+function getFavSet() { try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); } catch { return new Set(); } }
+function saveFavSet(set) { localStorage.setItem(FAV_KEY, JSON.stringify([...set])); }
 
 /* =========================
    Map Init
 ========================= */
 const defaultCenter = [22.3369, 114.1476];
 const defaultZoom = 12;
-
 const mapDesktop = L.map("mapDesktop", { zoomControl: false }).setView(defaultCenter, defaultZoom);
 const mapMobile  = L.map("mapMobile",  { zoomControl: false }).setView(defaultCenter, defaultZoom);
-
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapDesktop);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapMobile);
 
@@ -427,7 +389,9 @@ function normalizeSalon(raw) {
     for (const t of targetKeys) {
       const cleanTarget = t.toLowerCase().replace(/[^a-z0-9]/g, "");
       const val = lookup[cleanTarget];
-      if (val !== undefined && val !== null && String(val) !== "") return val;
+      if (val !== undefined && val !== null && String(val) !== "") {
+        return val;
+      }
     }
     return "";
   };
@@ -458,9 +422,7 @@ function normalizeSalon(raw) {
   let verified = String(getVal(["last_verified"]) || "").trim();
   s.last_verified = formatDate(verified); 
 
-  // ✅ 關鍵修正：status 空值都當 active，避免「全部過濾走」
-  const st = String(getVal(["status"]) || "").trim().toLowerCase();
-  s.status = st || "active";
+  s.status = String(getVal(["status"]) || "").trim().toLowerCase();
 
   return s;
 }
@@ -479,52 +441,40 @@ function matchesQuery(s, q) {
 
 function matchesTags(s, tagsSet) {
   if (tagsSet.size === 0) return true;
-
+  
   const itemTags = new Set((s.tags || []).map(t => t.toLowerCase()));
-
+  
   let rawStr = (s.price_range_hkd || "") + " " + (s.price_tier_min || "");
   let numbers = rawStr.match(/\d+/g);
   if (numbers && numbers.length > 0) {
-    let nums = numbers.map(n => parseInt(n, 10));
-    let minP = Math.min(...nums);
-    let maxP = Math.max(...nums);
-    if (minP < 200) itemTags.add("$");
-    if (maxP >= 200 && minP < 500) itemTags.add("$$");
-    if (maxP >= 500 && minP < 800) itemTags.add("$$$");
-    if (maxP >= 800 && minP < 1300) itemTags.add("$$$$");
-    if (maxP >= 1300) itemTags.add("$$$$$");
+     let nums = numbers.map(n => parseInt(n, 10));
+     let minP = Math.min(...nums);
+     let maxP = Math.max(...nums);
+     if (minP < 200) itemTags.add("$");
+     if (maxP >= 200 && minP < 500) itemTags.add("$$");
+     if (maxP >= 500 && minP < 800) itemTags.add("$$$");
+     if (maxP >= 800 && minP < 1300) itemTags.add("$$$$");
+     if (maxP >= 1300) itemTags.add("$$$$$");
   } else {
-    if (s.price_tier_min) itemTags.add(s.price_tier_min.toLowerCase());
-    if (s.price_tier_max) itemTags.add(s.price_tier_max.toLowerCase());
+     if (s.price_tier_min) itemTags.add(s.price_tier_min.toLowerCase());
+     if (s.price_tier_max) itemTags.add(s.price_tier_max.toLowerCase());
   }
 
-  for (const tag of tagsSet) {
-    if (!itemTags.has(tag.toLowerCase())) return false;
+  for (const tag of tagsSet) { 
+    if (!itemTags.has(tag.toLowerCase())) return false; 
   }
   return true;
 }
 
-function isActiveStatus(s) {
-  // ✅ 更穩陣：active / 空 / 未填 都視作可顯示
-  const st = String(s.status || "").toLowerCase().trim();
-  return st === "" || st === "active";
-}
-
 function getFiltered() {
-  let items = SALONS
-    .filter(isActiveStatus)
-    .filter(s => matchesQuery(s, state.q))
-    .filter(s => matchesTags(s, state.activeTags));
-
+  let items = SALONS.filter(s => s.status === "active").filter(s => matchesQuery(s, state.q)).filter(s => matchesTags(s, state.activeTags));
   if (state.requireCoords) items = items.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-
   if (state.nearMeMode && state.userLoc) {
     items = items.map(s => {
       const has = Number.isFinite(s.lat) && Number.isFinite(s.lng);
       return { ...s, _km: has ? haversineKm(state.userLoc.lat, state.userLoc.lng, s.lat, s.lng) : null };
     }).sort((a,b) => {
-      if (a._km == null) return 1;
-      if (b._km == null) return -1;
+      if (a._km == null) return 1; if (b._km == null) return -1;
       return a._km - b._km;
     });
   }
@@ -538,32 +488,34 @@ function renderList(items) {
   const favs = getFavSet();
   const list = document.getElementById("list");
   const shown = items.slice(0, page * pageSize);
-
+  
   list.innerHTML = shown.map(s => {
     const price = formatPriceDisplay(s);
-    const distance = (state.nearMeMode && state.userLoc && s._km != null)
-      ? `<span class="text-xs font-semibold text-text-subtle">${s._km.toFixed(2)} km</span>` : "";
-
-    const tags = (s.tags || []).slice(0, 5)
-      .map(t => `<span class="px-2 py-1 bg-background-light rounded text-xs font-medium text-text-subtle">${escapeHtml(t)}</span>`)
-      .join("");
-
+    const distance = (state.nearMeMode && state.userLoc && s._km != null) ? `<span class="text-xs font-semibold text-text-subtle">${s._km.toFixed(2)} km</span>` : "";
+    const tags = (s.tags || []).slice(0, 5).map(t => `<span class="px-2 py-1 bg-background-light rounded text-xs font-medium text-text-subtle">${escapeHtml(t)}</span>`).join("");
     const hasCoords = Number.isFinite(s.lat) && Number.isFinite(s.lng);
-    const pinHint = hasCoords ? "（地圖可顯示）" : "（暫無座標，只顯示列表）";
     const favOn = favs.has(s.id);
     const heartClass = favOn ? "text-tertiary" : "text-text-subtle";
 
-    const updatedHtml = (s.show_updated && s.last_verified)
-      ? `<span class="text-[10px] text-text-subtle/80 ml-auto bg-background-light px-1.5 py-0.5 rounded border border-border-subtle/50">Updated as ${escapeHtml(s.last_verified)}</span>`
+    // ✅ Display: Updated as Dec 15 2025
+    const updatedHtml = (s.show_updated && s.last_verified) 
+      ? `<span class="text-[10px] text-text-subtle/80 ml-auto bg-background-light px-1.5 py-0.5 rounded border border-border-subtle/50">Updated as ${escapeHtml(s.last_verified)}</span>` 
       : "";
 
-    const noteHtml = (s.show_note && s.note)
-      ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>`
+    // ✅ Note Logic (Controlled by show_note)
+    const noteHtml = (s.show_note && s.note) 
+      ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>` 
       : "";
 
+    // ✅ Public Info Logic (Controlled by public_info, Below Updated Date)
     const publicInfoHtml = (s.public_info)
       ? `<div class="text-[10px] text-text-subtle/80 mt-1 text-right">資料來源：公開可查閱資料，實際資訊以商戶最新公佈為準</div>`
       : "";
+
+    // ✅ Missing Coords Warning Logic (Updated)
+    const pinHintHtml = hasCoords
+      ? ""
+      : `<p class="text-[11px] text-text-subtle mt-1">（未能找到地址，地圖無法顯示）</p>`;
 
     return `
       <article data-id="${escapeHtml(s.id)}" class="salonCard group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 cursor-pointer">
@@ -576,7 +528,7 @@ function renderList(items) {
                 ${s.district_en ? ` • ${escapeHtml(s.district_en)}` : ""}
                 ${price ? ` • <span class="font-semibold text-text-main">${escapeHtml(price)}</span>` : ""}
               </p>
-              <p class="text-[11px] text-text-subtle mt-1">${escapeHtml(pinHint)}</p>
+              ${pinHintHtml}
             </div>
             <div class="flex flex-col items-end gap-1">
               ${distance}
@@ -587,15 +539,16 @@ function renderList(items) {
           </div>
           <div class="flex flex-wrap gap-2">${tags}</div>
           <div class="pt-3 border-t border-background-light">
-            <div class="text-sm text-text-main"><span class="material-symbols-outlined align-[-5px] text-[18px] text-text-subtle">location_on</span> ${escapeHtml(s.address_display || "—")}</div>
-            ${noteHtml}
-            <div class="mt-2 flex flex-col">
-              <div class="flex items-center justify-between">
-                ${s.source_url ? `<a href="${s.source_url}" target="_blank" class="text-xs text-primary-hover underline">Source</a>` : "<span></span>"}
-                ${updatedHtml}
-              </div>
-              ${publicInfoHtml}
-            </div>
+             <div class="text-sm text-text-main"><span class="material-symbols-outlined align-[-5px] text-[18px] text-text-subtle">location_on</span> ${escapeHtml(s.address_display || "—")}</div>
+             ${noteHtml}
+             
+             <div class="mt-2 flex flex-col">
+               <div class="flex items-center justify-between">
+                  ${s.source_url ? `<a href="${s.source_url}" target="_blank" class="text-xs text-primary-hover underline">Source</a>` : "<span></span>"}
+                  ${updatedHtml}
+               </div>
+               ${publicInfoHtml}
+             </div>
           </div>
         </div>
       </article>
@@ -610,19 +563,15 @@ function renderMarkers(items) {
   layerDesktop.clearLayers();
   layerMobile.clearLayers();
   if (state.userLoc) setUserMarker(state.userLoc.lat, state.userLoc.lng);
-
   const withCoords = items.filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-
   withCoords.forEach(s => {
     const price = formatPriceDisplay(s);
-    const tags = (s.tags || []).slice(0, 4)
-      .map(t => `<span style="display:inline-block;margin:2px 2px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:10px;">${escapeHtml(t)}</span>`)
-      .join("");
-
-    const updatedHtml = (s.show_updated && s.last_verified)
-      ? `<div style="margin-top:4px;font-size:9px;color:#999;text-align:right;">Updated as ${escapeHtml(s.last_verified)}</div>`
+    const tags = (s.tags || []).slice(0, 4).map(t => `<span style="display:inline-block;margin:2px 2px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:10px;">${escapeHtml(t)}</span>`).join("");
+    
+    const updatedHtml = (s.show_updated && s.last_verified) 
+      ? `<div style="margin-top:4px;font-size:9px;color:#999;text-align:right;">Updated as ${escapeHtml(s.last_verified)}</div>` 
       : "";
-
+    
     const publicInfoHtml = (s.public_info)
       ? `<div style="margin-top:2px;font-size:9px;color:#999;text-align:right;">資料來源：公開可查閱資料，實際資訊以商戶最新公佈為準</div>`
       : "";
@@ -642,7 +591,6 @@ function renderMarkers(items) {
     const m2 = L.marker([s.lat, s.lng]).addTo(layerMobile).bindPopup(html);
     m1._salonId = s.id; m2._salonId = s.id;
   });
-
   if (withCoords.length > 0 && !state.nearMeMode) {
     const bounds = L.latLngBounds(withCoords.map(s => [s.lat, s.lng]));
     mapDesktop.fitBounds(bounds, { padding: [30,30], maxZoom: 16 });
@@ -661,7 +609,6 @@ function syncAll() {
 ========================= */
 function setQuery(q) { state.q = q || ""; page = 1; syncAll(); }
 const handleSearch = debounce((e) => setQuery(e.target.value), 300);
-
 document.getElementById("qTop").addEventListener("input", handleSearch);
 document.getElementById("qMobile").addEventListener("input", handleSearch);
 
@@ -670,11 +617,8 @@ document.querySelectorAll(".tagChip").forEach(btn => {
     const tag = btn.getAttribute("data-tag");
     const active = state.activeTags.has(tag);
     if (active) state.activeTags.delete(tag); else state.activeTags.add(tag);
-    btn.classList.toggle("border-primary", !active);
-    btn.classList.toggle("text-primary", !active);
-    btn.classList.toggle("bg-primary/10", !active);
-    page = 1;
-    syncAll();
+    btn.classList.toggle("border-primary", !active); btn.classList.toggle("text-primary", !active); btn.classList.toggle("bg-primary/10", !active);
+    page = 1; syncAll();
   });
 });
 
@@ -688,7 +632,7 @@ document.getElementById("btnNearMe").addEventListener("click", () => {
     mapDesktop.setView([state.userLoc.lat, state.userLoc.lng], 15);
     mapMobile.setView([state.userLoc.lat, state.userLoc.lng], 15);
     syncAll();
-  }, () => alert("定位失敗"));
+  }, err => alert("定位失敗"));
 });
 
 document.getElementById("btnLocateDesktop").addEventListener("click", () => document.getElementById("btnNearMe").click());
@@ -700,23 +644,13 @@ document.getElementById("btnZoomOutMobile").addEventListener("click", () => mapM
 
 document.getElementById("btnHasCoords").addEventListener("click", (e) => {
   state.requireCoords = !state.requireCoords;
-  e.currentTarget.classList.toggle("border-primary", state.requireCoords);
-  e.currentTarget.classList.toggle("text-primary", state.requireCoords);
-  e.currentTarget.classList.toggle("bg-primary/10", state.requireCoords);
-  page = 1;
-  syncAll();
+  e.currentTarget.classList.toggle("border-primary", state.requireCoords); e.currentTarget.classList.toggle("text-primary", state.requireCoords); e.currentTarget.classList.toggle("bg-primary/10", state.requireCoords);
+  page = 1; syncAll();
 });
 
 document.getElementById("btnReset").addEventListener("click", () => {
-  state.q = "";
-  state.activeTags.clear();
-  state.nearMeMode = false;
-  state.userLoc = null;
-  state.requireCoords = false;
-  page = 1;
-
-  document.getElementById("qTop").value = "";
-  document.getElementById("qMobile").value = "";
+  state.q = ""; state.activeTags.clear(); state.nearMeMode = false; state.userLoc = null; state.requireCoords = false; page = 1;
+  document.getElementById("qTop").value = ""; document.getElementById("qMobile").value = "";
   document.querySelectorAll(".tagChip").forEach(btn => btn.classList.remove("border-primary", "text-primary", "bg-primary/10"));
   document.getElementById("btnHasCoords").classList.remove("border-primary","text-primary","bg-primary/10");
   syncAll();
@@ -727,28 +661,18 @@ document.getElementById("btnLoadMore").addEventListener("click", () => { page +=
 document.getElementById("list").addEventListener("click", (e) => {
   const favBtn = e.target.closest(".btnFav");
   if (favBtn) {
-    e.stopPropagation();
-    const id = favBtn.getAttribute("data-fav");
-    const favs = getFavSet();
+    e.stopPropagation(); const id = favBtn.getAttribute("data-fav"); const favs = getFavSet();
     if (favs.has(id)) favs.delete(id); else favs.add(id);
-    saveFavSet(favs);
-    syncAll();
-    return;
+    saveFavSet(favs); syncAll(); return;
   }
-
   const card = e.target.closest(".salonCard");
   if (card) {
-    const id = card.getAttribute("data-id");
-    const s = SALONS.find(x => x.id === id);
+    const id = card.getAttribute("data-id"); const s = SALONS.find(x => x.id === id);
     if (s && Number.isFinite(s.lat) && Number.isFinite(s.lng)) {
-      mapDesktop.setView([s.lat, s.lng], 17);
-      mapMobile.setView([s.lat, s.lng], 17);
-      layerDesktop.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
-      layerMobile.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
+      mapDesktop.setView([s.lat, s.lng], 17); mapMobile.setView([s.lat, s.lng], 17);
+      layerDesktop.eachLayer(l => { if (l._salonId === id) l.openPopup(); }); layerMobile.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
       if (window.innerWidth < 768) document.getElementById("tabMap").click();
-    } else {
-      alert("此店暫無座標");
-    }
+    } else { alert("此店暫無座標"); }
   }
 });
 
@@ -758,22 +682,15 @@ const tabList = document.getElementById("tabList");
 const tabMap = document.getElementById("tabMap");
 
 tabList.addEventListener("click", () => {
-  panelList.classList.remove("hidden");
-  panelMapMobile.classList.add("hidden");
-  tabList.classList.add("bg-text-main","text-white");
-  tabList.classList.remove("text-text-main");
-  tabMap.classList.remove("bg-text-main","text-white");
-  tabMap.classList.add("text-text-main");
+  panelList.classList.remove("hidden"); panelMapMobile.classList.add("hidden");
+  tabList.classList.add("bg-text-main","text-white"); tabList.classList.remove("text-text-main");
+  tabMap.classList.remove("bg-text-main","text-white"); tabMap.classList.add("text-text-main");
 });
 
 tabMap.addEventListener("click", () => {
-  panelList.classList.add("hidden");
-  panelMapMobile.classList.remove("hidden");
-  tabMap.classList.add("bg-text-main","text-white");
-  tabMap.classList.remove("text-text-main");
-  tabList.classList.remove("bg-text-main","text-white");
-  tabList.classList.add("text-text-main");
-
+  panelList.classList.add("hidden"); panelMapMobile.classList.remove("hidden");
+  tabMap.classList.add("bg-text-main","text-white"); tabMap.classList.remove("text-text-main");
+  tabList.classList.remove("bg-text-main","text-white"); tabList.classList.add("text-text-main");
   requestAnimationFrame(() => {
     mapMobile.invalidateSize();
     const items = getFiltered().filter(s => Number.isFinite(s.lat));
@@ -784,38 +701,32 @@ tabMap.addEventListener("click", () => {
   });
 });
 
-window.addEventListener("resize", () => {
-  requestAnimationFrame(() => {
-    mapDesktop.invalidateSize();
-    mapMobile.invalidateSize();
-  });
-});
+window.addEventListener("resize", () => { requestAnimationFrame(() => { mapDesktop.invalidateSize(); mapMobile.invalidateSize(); }); });
 
 /* =========================
    Boot
 ========================= */
 async function load() {
   try {
-    const res = await fetch(API_URL, { cache: "no-store" });
+    const res = await fetch(API_URL);
     const data = await res.json();
-    const rows = Array.isArray(data) ? data : (data.salons || []);
-
-    if (rows.length > 0) console.log("🔥 API Raw Data Sample:", rows[0]);
+    let rows = Array.isArray(data) ? data : (data.salons || []);
+    
+    // 🛠️ DEBUG: Check console for raw keys
+    if (rows.length > 0) {
+      console.log("🔥 API Raw Data Sample:", rows[0]);
+    }
 
     SALONS = rows.map(normalizeSalon);
-
+    
     const warns = (data.warnings || []);
     if (warns.length) {
       document.getElementById("bannerWarn").classList.remove("hidden");
       document.getElementById("warnText").textContent = `Warnings: ${warns.length} items (Check Console)`;
       console.warn(warns);
     }
-
     syncAll();
-  } catch (e) {
-    console.error(e);
-    alert("Load failed: " + e.message);
-  }
+  } catch (e) { console.error(e); alert("Load failed: " + e.message); }
 }
 
 load();
