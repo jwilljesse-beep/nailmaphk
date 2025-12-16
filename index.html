@@ -45,6 +45,16 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .leaflet-container { font: inherit; }
+    /* Custom select style */
+    .sort-select {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2399827D' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.2rem center;
+      background-size: 1.25em 1.25em;
+      padding-right: 1.5rem;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
   </style>
 </head>
 
@@ -134,9 +144,17 @@
         </div>
 
         <div class="flex items-center justify-between">
-          <h1 class="text-text-main text-lg font-extrabold tracking-tight">
-            <span id="countText">—</span> 間結果
-          </h1>
+          <div class="flex items-center gap-3">
+            <h1 class="text-text-main text-lg font-extrabold tracking-tight">
+              <span id="countText">—</span> 間結果
+            </h1>
+            <select id="sortSelect" class="sort-select bg-transparent border-0 border-b border-border-subtle py-0.5 pl-0 pr-6 text-xs font-bold text-text-subtle focus:ring-0 cursor-pointer hover:text-text-main">
+              <option value="latest">最後更新</option>
+              <option value="price_asc">價錢（由低至高）</option>
+              <option value="price_desc">價錢（由高至低）</option>
+            </select>
+          </div>
+
           <button id="btnReset" class="text-sm text-text-subtle hover:text-text-main inline-flex items-center gap-1">
             <span class="material-symbols-outlined text-[18px]">restart_alt</span>
             Reset
@@ -268,7 +286,7 @@ function debounce(func, wait) {
   };
 }
 
-// ✅ Correct Date Format: "Dec 15 2025"
+// ✅ DATE FORMATTER: "Dec 15 2025"
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -307,7 +325,7 @@ function formatPriceDisplay(s) {
   let displayRange = "";
 
   if (numbers && numbers.length > 0) {
-    // ✅ Plan A: 找到數字 -> 自動計算
+    // Plan A: Auto Calculate
     let nums = numbers.map(n => parseInt(n, 10)).sort((a, b) => a - b);
     let minP = nums[0];
     let maxP = nums[nums.length - 1];
@@ -316,8 +334,9 @@ function formatPriceDisplay(s) {
     let t2 = getTierSymbol(maxP);
     displayTier = (t1 === t2) ? t1 : `${t1}-${t2}`;
     displayRange = (minP === maxP) ? `HKD${minP}` : `HKD${minP}－${maxP}`;
+
   } else {
-    // ✅ Plan B: 沒數字 -> 查表翻譯
+    // Plan B: Fallback
     let tMin = sheetMinTier || "$";
     let tMax = sheetMaxTier || tMin;
     displayTier = (tMin === tMax) ? tMin : `${tMin}-${tMax}`;
@@ -327,7 +346,6 @@ function formatPriceDisplay(s) {
     displayRange = `HKD${rangeLow}－${rangeHigh}`;
   }
 
-  // ✅ Final: Tier + "大約" + Range
   return `${displayTier} 大約（${displayRange}）`;
 }
 
@@ -354,7 +372,9 @@ function expandQueryVariants(q) {
   for (const item of DISTRICT_SYNONYMS) {
     const allKeywords = [...item.en, ...item.zh];
     const isHit = allKeywords.some(k => n.includes(norm(k)));
-    if (isHit) allKeywords.forEach(k => vars.add(norm(k)));
+    if (isHit) {
+      allKeywords.forEach(k => vars.add(norm(k)));
+    }
   }
   return [...vars];
 }
@@ -363,8 +383,10 @@ function expandQueryVariants(q) {
    Data & State
 ========================= */
 let SALONS = [];
-let state = { q: "", activeTags: new Set(), nearMeMode: false, userLoc: null, requireCoords: false };
-let pageSize = 60;
+// ✅ State: Added sortBy (default 'latest')
+let state = { q: "", activeTags: new Set(), nearMeMode: false, userLoc: null, requireCoords: false, sortBy: "latest" };
+// ✅ Page Size: Changed to 15
+let pageSize = 15;
 let page = 1;
 
 const FAV_KEY = "nailmap_favs_v1";
@@ -443,15 +465,24 @@ function normalizeSalon(raw) {
   s.note = String(getVal(["note"]) || "").trim();
   s.source_url = String(getVal(["source_url", "url"]) || "").trim();
   
-  // ✅ New Logic
+  // Logic
   s.show_updated = toBool(getVal(["show_updated"]));
   s.show_note = toBool(getVal(["show_note"]));
   s.public_info = toBool(getVal(["public_info"]));
 
   let verified = String(getVal(["last_verified"]) || "").trim();
+  
+  // ✅ Store Timestamp for Sorting
+  s._ts = 0;
+  if (verified) {
+    const d = new Date(verified);
+    if (!isNaN(d.getTime())) s._ts = d.getTime();
+  }
   s.last_verified = formatDate(verified); 
 
-  // Status Check
+  // ✅ Store Price Score for Sorting
+  s._pScore = (s.price_tier_min || "").length; // $ = 1, $$ = 2
+
   const st = String(getVal(["status"]) || "").trim().toLowerCase();
   s.status = st || "active";
 
@@ -475,7 +506,6 @@ function matchesTags(s, tagsSet) {
 
   const itemTags = new Set((s.tags || []).map(t => t.toLowerCase()));
 
-  // Dynamic Tags from Price
   let rawStr = (s.price_range_hkd || "") + " " + (s.price_tier_min || "");
   let numbers = rawStr.match(/\d+/g);
   if (numbers && numbers.length > 0) {
@@ -520,7 +550,17 @@ function getFiltered() {
       if (b._km == null) return -1;
       return a._km - b._km;
     });
+  } else {
+    // ✅ Apply Sort if not Near Me
+    if (state.sortBy === "latest") {
+      items.sort((a, b) => b._ts - a._ts);
+    } else if (state.sortBy === "price_asc") {
+      items.sort((a, b) => a._pScore - b._pScore);
+    } else if (state.sortBy === "price_desc") {
+      items.sort((a, b) => b._pScore - a._pScore);
+    }
   }
+  
   return items;
 }
 
@@ -545,22 +585,18 @@ function renderList(items) {
     const favOn = favs.has(s.id);
     const heartClass = favOn ? "text-tertiary" : "text-text-subtle";
 
-    // ✅ Display: Updated as Dec 15 2025
     const updatedHtml = (s.show_updated && s.last_verified)
       ? `<span class="text-[10px] text-text-subtle/80 ml-auto bg-background-light px-1.5 py-0.5 rounded border border-border-subtle/50">Updated as ${escapeHtml(s.last_verified)}</span>`
       : "";
 
-    // ✅ Note Logic
     const noteHtml = (s.show_note && s.note)
       ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>`
       : "";
 
-    // ✅ Public Info Logic
     const publicInfoHtml = (s.public_info)
       ? `<div class="text-[10px] text-text-subtle/80 mt-1 text-right">資料來源：公開可查閱資料，實際資訊以商戶最新公佈為準</div>`
       : "";
 
-    // ✅ Map Hint Logic: Show text ONLY if coords missing
     const pinHintHtml = hasCoords 
       ? "" 
       : `<p class="text-[11px] text-text-subtle mt-1">（未能找到地址，地圖無法顯示）</p>`;
@@ -655,6 +691,150 @@ function syncAll() {
   renderList(items);
   renderMarkers(items);
 }
+
+/* =========================
+   Events
+========================= */
+function setQuery(q) { state.q = q || ""; page = 1; syncAll(); }
+const handleSearch = debounce((e) => setQuery(e.target.value), 300);
+
+document.getElementById("qTop").addEventListener("input", handleSearch);
+document.getElementById("qMobile").addEventListener("input", handleSearch);
+
+// ✅ Sort Event
+document.getElementById("sortSelect").addEventListener("change", (e) => {
+  state.sortBy = e.target.value;
+  page = 1;
+  syncAll();
+});
+
+document.querySelectorAll(".tagChip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const tag = btn.getAttribute("data-tag");
+    const active = state.activeTags.has(tag);
+    if (active) state.activeTags.delete(tag); else state.activeTags.add(tag);
+    btn.classList.toggle("border-primary", !active);
+    btn.classList.toggle("text-primary", !active);
+    btn.classList.toggle("bg-primary/10", !active);
+    page = 1;
+    syncAll();
+  });
+});
+
+document.getElementById("btnNearMe").addEventListener("click", () => {
+  if (location.protocol !== "https:" && location.hostname !== "localhost") { alert("Near Me 需要 HTTPS。"); return; }
+  if (!navigator.geolocation) return alert("不支援定位");
+  navigator.geolocation.getCurrentPosition(pos => {
+    state.userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    state.nearMeMode = true;
+    setUserMarker(state.userLoc.lat, state.userLoc.lng);
+    mapDesktop.setView([state.userLoc.lat, state.userLoc.lng], 15);
+    mapMobile.setView([state.userLoc.lat, state.userLoc.lng], 15);
+    syncAll();
+  }, () => alert("定位失敗"));
+});
+
+document.getElementById("btnLocateDesktop").addEventListener("click", () => document.getElementById("btnNearMe").click());
+document.getElementById("btnLocateMobile").addEventListener("click", () => document.getElementById("btnNearMe").click());
+document.getElementById("btnZoomInDesktop").addEventListener("click", () => mapDesktop.zoomIn());
+document.getElementById("btnZoomOutDesktop").addEventListener("click", () => mapDesktop.zoomOut());
+document.getElementById("btnZoomInMobile").addEventListener("click", () => mapMobile.zoomIn());
+document.getElementById("btnZoomOutMobile").addEventListener("click", () => mapMobile.zoomOut());
+
+document.getElementById("btnHasCoords").addEventListener("click", (e) => {
+  state.requireCoords = !state.requireCoords;
+  e.currentTarget.classList.toggle("border-primary", state.requireCoords);
+  e.currentTarget.classList.toggle("text-primary", state.requireCoords);
+  e.currentTarget.classList.toggle("bg-primary/10", state.requireCoords);
+  page = 1;
+  syncAll();
+});
+
+document.getElementById("btnReset").addEventListener("click", () => {
+  state.q = "";
+  state.activeTags.clear();
+  state.nearMeMode = false;
+  state.userLoc = null;
+  state.requireCoords = false;
+  state.sortBy = "latest"; // reset sort
+  document.getElementById("sortSelect").value = "latest"; // reset UI
+  page = 1;
+
+  document.getElementById("qTop").value = "";
+  document.getElementById("qMobile").value = "";
+  document.querySelectorAll(".tagChip").forEach(btn => btn.classList.remove("border-primary", "text-primary", "bg-primary/10"));
+  document.getElementById("btnHasCoords").classList.remove("border-primary","text-primary","bg-primary/10");
+  syncAll();
+});
+
+document.getElementById("btnLoadMore").addEventListener("click", () => { page += 1; syncAll(); });
+
+document.getElementById("list").addEventListener("click", (e) => {
+  const favBtn = e.target.closest(".btnFav");
+  if (favBtn) {
+    e.stopPropagation();
+    const id = favBtn.getAttribute("data-fav");
+    const favs = getFavSet();
+    if (favs.has(id)) favs.delete(id); else favs.add(id);
+    saveFavSet(favs);
+    syncAll();
+    return;
+  }
+
+  const card = e.target.closest(".salonCard");
+  if (card) {
+    const id = card.getAttribute("data-id");
+    const s = SALONS.find(x => x.id === id);
+    if (s && Number.isFinite(s.lat) && Number.isFinite(s.lng)) {
+      mapDesktop.setView([s.lat, s.lng], 17);
+      mapMobile.setView([s.lat, s.lng], 17);
+      layerDesktop.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
+      layerMobile.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
+      if (window.innerWidth < 768) document.getElementById("tabMap").click();
+    } else {
+      // 點擊卡片時，如果沒有座標，不彈 Alert，靜默失敗即可（因為列表已經有文字提示）
+    }
+  }
+});
+
+const panelList = document.getElementById("panelList");
+const panelMapMobile = document.getElementById("panelMapMobile");
+const tabList = document.getElementById("tabList");
+const tabMap = document.getElementById("tabMap");
+
+tabList.addEventListener("click", () => {
+  panelList.classList.remove("hidden");
+  panelMapMobile.classList.add("hidden");
+  tabList.classList.add("bg-text-main","text-white");
+  tabList.classList.remove("text-text-main");
+  tabMap.classList.remove("bg-text-main","text-white");
+  tabMap.classList.add("text-text-main");
+});
+
+tabMap.addEventListener("click", () => {
+  panelList.classList.add("hidden");
+  panelMapMobile.classList.remove("hidden");
+  tabMap.classList.add("bg-text-main","text-white");
+  tabMap.classList.remove("text-text-main");
+  tabList.classList.remove("bg-text-main","text-white");
+  tabList.classList.add("text-text-main");
+
+  requestAnimationFrame(() => {
+    mapMobile.invalidateSize();
+    const items = getFiltered().filter(s => Number.isFinite(s.lat));
+    if (items.length) {
+      const bounds = L.latLngBounds(items.map(s => [s.lat, s.lng]));
+      mapMobile.fitBounds(bounds, { padding: [50,50], maxZoom: 16 });
+    }
+  });
+});
+
+window.addEventListener("resize", () => {
+  requestAnimationFrame(() => {
+    mapDesktop.invalidateSize();
+    mapMobile.invalidateSize();
+  });
+});
 
 /* =========================
    Boot
