@@ -199,6 +199,7 @@
 /* =========================
    CONFIG
 ========================= */
+// ⚠️ 記得使用最新部署的 GAS URL
 const API_URL = "https://script.google.com/macros/s/AKfycbzIweqyWYjcpMLsFB69d_a-l7RqeDhwpDJDpT_JVSJEUJUKBkRfR-wil4ttqkKlxRkvDg/exec";
 
 /* =========================
@@ -248,7 +249,6 @@ function debounce(func, wait) {
   };
 }
 
-// ✅ DATE FORMATTER: "Mon Dec 15 2025..." -> "Dec 15 2025"
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -257,9 +257,8 @@ function formatDate(dateStr) {
 }
 
 /* =========================
-   ✅ Price Calculation & Fallback Map
+   Price Calculation & Fallback Map
 ========================= */
-// 符號 -> 文字翻譯表 (Plan B 使用)
 const TIER_RANGES = {
   "$": { min: "200以下", max: "199" },
   "$$": { min: "200", max: "499" },
@@ -268,7 +267,6 @@ const TIER_RANGES = {
   "$$$$$": { min: "1300", max: "1300以上" }
 };
 
-// 數字 -> 符號計算 (Plan A 使用)
 function getTierSymbol(val) {
   if (val < 200) return "$";
   if (val < 500) return "$$";
@@ -278,12 +276,10 @@ function getTierSymbol(val) {
 }
 
 function formatPriceDisplay(s) {
-  // 1. Gather raw inputs
-  const sheetMinTier = (s.price_tier_min || "").trim(); // e.g. "$"
-  const sheetMaxTier = (s.price_tier_max || "").trim(); // e.g. "$$"
-  const sheetRange = (s.price_range_hkd || "").trim(); // e.g. "218-500" or empty
+  const sheetMinTier = (s.price_tier_min || "").trim();
+  const sheetMaxTier = (s.price_tier_max || "").trim();
+  const sheetRange = (s.price_range_hkd || "").trim();
 
-  // Check if we have extractable numbers
   let rawStr = sheetRange + " " + sheetMinTier + " " + sheetMaxTier;
   let numbers = rawStr.match(/\d+/g);
 
@@ -291,7 +287,6 @@ function formatPriceDisplay(s) {
   let displayRange = "";
 
   if (numbers && numbers.length > 0) {
-    // ✅ Plan A: 找到數字，自動計算
     let nums = numbers.map(n => parseInt(n, 10)).sort((a, b) => a - b);
     let minP = nums[0];
     let maxP = nums[nums.length - 1];
@@ -302,21 +297,16 @@ function formatPriceDisplay(s) {
     displayRange = (minP === maxP) ? `HKD${minP}` : `HKD${minP}－${maxP}`;
 
   } else {
-    // ✅ Plan B: 找不到數字，查表翻譯 (Fallback)
-    // Step 1: 確定顯示的 $$ 符號
-    let tMin = sheetMinTier || "$"; // default minimal safety
+    // Fallback: Translate symbols to text range
+    let tMin = sheetMinTier || "$";
     let tMax = sheetMaxTier || tMin;
     displayTier = (tMin === tMax) ? tMin : `${tMin}-${tMax}`;
 
-    // Step 2: 根據符號查表找出範圍文字
-    // 邏輯：從 Min Tier 的最小值，到 Max Tier 的最大值
     let rangeLow = TIER_RANGES[tMin]?.min || "???";
     let rangeHigh = TIER_RANGES[tMax]?.max || "???";
-    
     displayRange = `HKD${rangeLow}－${rangeHigh}`;
   }
 
-  // ✅ Final Output: Tier + "大約" + (Range)
   return `${displayTier} 大約（${displayRange}）`;
 }
 
@@ -412,7 +402,6 @@ function normalizeSalon(raw) {
   s.district = String(getVal(["district"]) || "").trim();
   s.district_en = String(getVal(["district_en"]) || "").trim();
 
-  // Price keys
   s.price_tier_min = String(getVal(["price_tier_min", "min_price"]) || "").trim();
   s.price_tier_max = String(getVal(["price_tier_max", "max_price"]) || "").trim();
   s.price_range_hkd = String(getVal(["price_range_hkd", "price_range"]) || "").trim();
@@ -426,9 +415,11 @@ function normalizeSalon(raw) {
   s.note = String(getVal(["note"]) || "").trim();
   s.source_url = String(getVal(["source_url", "url"]) || "").trim();
   
+  // ✅ New Logic
   s.show_updated = toBool(getVal(["show_updated"]));
-  
-  // ✅ Parse date immediately (e.g. from 2025-12-15T00:00:00.000Z)
+  s.show_note = toBool(getVal(["show_note"]));
+  s.public_info = toBool(getVal(["public_info"]));
+
   let verified = String(getVal(["last_verified"]) || "").trim();
   s.last_verified = formatDate(verified); 
 
@@ -449,13 +440,11 @@ function matchesQuery(s, q) {
   return variants.some(v => blob.includes(v));
 }
 
-// Filter logic including Price Tiers
 function matchesTags(s, tagsSet) {
   if (tagsSet.size === 0) return true;
   
   const itemTags = new Set((s.tags || []).map(t => t.toLowerCase()));
   
-  // Dynamic tagging based on extracted price
   let rawStr = (s.price_range_hkd || "") + " " + (s.price_tier_min || "");
   let numbers = rawStr.match(/\d+/g);
   if (numbers && numbers.length > 0) {
@@ -468,7 +457,6 @@ function matchesTags(s, tagsSet) {
      if (maxP >= 800 && minP < 1300) itemTags.add("$$$$");
      if (maxP >= 1300) itemTags.add("$$$$$");
   } else {
-     // Fallback tags from sheet columns
      if (s.price_tier_min) itemTags.add(s.price_tier_min.toLowerCase());
      if (s.price_tier_max) itemTags.add(s.price_tier_max.toLowerCase());
   }
@@ -516,6 +504,16 @@ function renderList(items) {
       ? `<span class="text-[10px] text-text-subtle/80 ml-auto bg-background-light px-1.5 py-0.5 rounded border border-border-subtle/50">Updated as ${escapeHtml(s.last_verified)}</span>` 
       : "";
 
+    // ✅ Note Logic (Controlled by show_note)
+    const noteHtml = (s.show_note && s.note) 
+      ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>` 
+      : "";
+
+    // ✅ Public Info Logic (Controlled by public_info, Below Updated Date)
+    const publicInfoHtml = (s.public_info)
+      ? `<div class="text-[10px] text-text-subtle/80 mt-1 text-right">資料來源：公開可查閱資料，實際資訊以商戶最新公佈為準</div>`
+      : "";
+
     return `
       <article data-id="${escapeHtml(s.id)}" class="salonCard group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 cursor-pointer">
         <div class="flex flex-col gap-3">
@@ -539,11 +537,14 @@ function renderList(items) {
           <div class="flex flex-wrap gap-2">${tags}</div>
           <div class="pt-3 border-t border-background-light">
              <div class="text-sm text-text-main"><span class="material-symbols-outlined align-[-5px] text-[18px] text-text-subtle">location_on</span> ${escapeHtml(s.address_display || "—")}</div>
-             ${s.note ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>` : ""}
+             ${noteHtml}
              
-             <div class="mt-2 flex items-center justify-between">
-                ${s.source_url ? `<a href="${s.source_url}" target="_blank" class="text-xs text-primary-hover underline">Source</a>` : "<span></span>"}
-                ${updatedHtml}
+             <div class="mt-2 flex flex-col">
+               <div class="flex items-center justify-between">
+                  ${s.source_url ? `<a href="${s.source_url}" target="_blank" class="text-xs text-primary-hover underline">Source</a>` : "<span></span>"}
+                  ${updatedHtml}
+               </div>
+               ${publicInfoHtml}
              </div>
           </div>
         </div>
@@ -564,9 +565,13 @@ function renderMarkers(items) {
     const price = formatPriceDisplay(s);
     const tags = (s.tags || []).slice(0, 4).map(t => `<span style="display:inline-block;margin:2px 2px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:10px;">${escapeHtml(t)}</span>`).join("");
     
-    // ✅ Display: Updated as Dec 15 2025
+    // ✅ Updated Date & Public Info on Map
     const updatedHtml = (s.show_updated && s.last_verified) 
       ? `<div style="margin-top:4px;font-size:9px;color:#999;text-align:right;">Updated as ${escapeHtml(s.last_verified)}</div>` 
+      : "";
+    
+    const publicInfoHtml = (s.public_info)
+      ? `<div style="margin-top:2px;font-size:9px;color:#999;text-align:right;">資料來源：公開可查閱資料，實際資訊以商戶最新公佈為準</div>`
       : "";
 
     const html = `
@@ -576,6 +581,7 @@ function renderMarkers(items) {
         <div style="margin-top:6px;font-size:13px;">${escapeHtml(s.address_display)}</div>
         <div style="margin-top:6px;">${tags}</div>
         ${updatedHtml}
+        ${publicInfoHtml}
         ${s.source_url ? `<div style="margin-top:6px;"><a href="${s.source_url}" target="_blank" style="color:#E57A85;">Source</a></div>` : ""}
       </div>
     `;
@@ -704,6 +710,7 @@ async function load() {
     const data = await res.json();
     let rows = Array.isArray(data) ? data : (data.salons || []);
     
+    // 🛠️ DEBUG: 強制印出 API 資料讓使用者檢查
     if (rows.length > 0) {
       console.log("🔥 [DEBUG] API 回傳的第一筆資料:", rows[0]);
     }
