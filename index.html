@@ -45,21 +45,11 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .leaflet-container { font: inherit; }
-    /* Sort Select Style */
-    .sort-select {
-      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2399827D' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-      background-position: right 0.2rem center;
-      background-size: 1.25em 1.25em;
-      padding-right: 1.5rem;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-    }
   </style>
 </head>
 
 <body class="bg-background-light text-text-main flex flex-col h-dvh overflow-hidden">
-  
+
   <header class="flex-none z-20 bg-white-overlay border-b border-border-subtle px-5 py-3 lg:px-10">
     <div class="flex items-center w-full max-w-[1920px] mx-auto">
       <div class="flex-1 flex items-center gap-3">
@@ -83,7 +73,7 @@
       </div>
 
       <div class="flex-1 flex justify-end">
-        <div class="hidden"></div> 
+        <div class="hidden"></div>
       </div>
     </div>
   </header>
@@ -96,7 +86,7 @@
   </div>
 
   <main class="flex-1 min-h-0 w-full max-w-[1920px] mx-auto flex overflow-hidden relative">
-    
+
     <section id="panelList" class="w-full md:w-[55%] xl:w-[50%] h-full bg-background-light relative z-10 shadow-xl md:shadow-none overflow-hidden flex flex-col">
       <div class="flex-none px-4 md:px-5 py-4 bg-background-light/95 backdrop-blur-sm border-b border-border-subtle flex flex-col gap-3">
         <label class="relative block md:hidden">
@@ -112,7 +102,7 @@
           <button id="btnHasCoords" class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">有地圖座標</span>
           </button>
-          
+
           <button data-tag="$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">$</span>
           </button>
@@ -122,10 +112,10 @@
           <button data-tag="$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">$$$</span>
           </button>
-           <button data-tag="$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+          <button data-tag="$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">$$$$</span>
           </button>
-           <button data-tag="$$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
+          <button data-tag="$$$$$" class="tagChip flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-border-subtle px-4 hover:border-primary hover:text-primary transition-colors">
             <span class="text-sm font-medium">$$$$$</span>
           </button>
 
@@ -143,22 +133,26 @@
           </button>
         </div>
 
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <h1 class="text-text-main text-lg font-extrabold tracking-tight">
-              <span id="countText">—</span> 間結果
-            </h1>
-            <select id="sortSelect" class="sort-select bg-transparent border-0 border-b border-border-subtle py-0.5 pl-0 pr-6 text-xs font-bold text-text-subtle focus:ring-0 cursor-pointer hover:text-text-main">
-              <option value="latest">最後更新</option>
-              <option value="price_asc">價錢（由低至高）</option>
-              <option value="price_desc">價錢（由高至低）</option>
-            </select>
-          </div>
+        <div class="flex items-center justify-between gap-3">
+          <h1 class="text-text-main text-lg font-extrabold tracking-tight">
+            <span id="countText">—</span> 間結果
+          </h1>
 
-          <button id="btnReset" class="text-sm text-text-subtle hover:text-text-main inline-flex items-center gap-1">
-            <span class="material-symbols-outlined text-[18px]">restart_alt</span>
-            Reset
-          </button>
+          <!-- ✅ NEW: Sort filter -->
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-xs text-text-subtle font-semibold">Sort</span>
+            <select id="sortSelect"
+              class="h-9 rounded-full border border-border-subtle bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+              <option value="updated" selected>最後更新</option>
+              <option value="price_low">$</option>
+              <option value="price_high">$$$$$</option>
+            </select>
+
+            <button id="btnReset" class="text-sm text-text-subtle hover:text-text-main inline-flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+              Reset
+            </button>
+          </div>
         </div>
 
         <div id="bannerWarn" class="hidden text-sm bg-white border border-border-subtle text-text-main rounded-xl px-4 py-3">
@@ -220,6 +214,26 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzWRh14SK5_MgsyLGGm8V7mu2QsD3r4w1M6ME-0h6tWJJChj2YITcp4tR8xFBzhke1LCg/exec";
 
 /* =========================
+   Global Safety Nets
+========================= */
+window.addEventListener("unhandledrejection", (e) => {
+  console.warn("Unhandled promise rejection (ignored to keep UI running):", e.reason);
+});
+window.addEventListener("error", (e) => {
+  console.warn("Window error:", e.message);
+});
+
+/* =========================
+   Safe Storage Wrapper
+========================= */
+function storageGet(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+function storageSet(key, val) {
+  try { localStorage.setItem(key, val); } catch { /* ignore */ }
+}
+
+/* =========================
    Helpers
 ========================= */
 function norm(str) {
@@ -266,15 +280,48 @@ function debounce(func, wait) {
   };
 }
 
+// ✅ Correct Date Format: "Dec 15 2025"
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g, ""); 
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).replace(/,/g, "");
 }
 
 /* =========================
-   Price Calculation
+   ✅ Price + Updated sort keys
+========================= */
+const TIER_BOUNDS = {
+  "$": [0, 199],
+  "$$": [200, 499],
+  "$$$": [500, 799],
+  "$$$$": [800, 1299],
+  "$$$$$": [1300, 999999]
+};
+
+function extractMinMaxPriceFromSalon(s) {
+  const rawStr = `${s.price_range_hkd || ""} ${s.price_tier_min || ""} ${s.price_tier_max || ""}`;
+  const nums = rawStr.match(/\d+/g)?.map(n => parseInt(n, 10)).filter(n => Number.isFinite(n));
+
+  if (nums && nums.length) {
+    nums.sort((a,b)=>a-b);
+    return { min: nums[0], max: nums[nums.length - 1] };
+  }
+
+  const tMin = (s.price_tier_min || "").trim();
+  const tMax = (s.price_tier_max || "").trim() || tMin;
+
+  if (TIER_BOUNDS[tMin] || TIER_BOUNDS[tMax]) {
+    const min = (TIER_BOUNDS[tMin] ? TIER_BOUNDS[tMin][0] : TIER_BOUNDS["$"][0]);
+    const max = (TIER_BOUNDS[tMax] ? TIER_BOUNDS[tMax][1] : (TIER_BOUNDS[tMin]?.[1] ?? TIER_BOUNDS["$$$$$"][1]));
+    return { min, max };
+  }
+
+  return { min: null, max: null };
+}
+
+/* =========================
+   Price Calculation & Fallback Map
 ========================= */
 const TIER_RANGES = {
   "$": { min: "200以下", max: "199" },
@@ -312,7 +359,6 @@ function formatPriceDisplay(s) {
     let t2 = getTierSymbol(maxP);
     displayTier = (t1 === t2) ? t1 : `${t1}-${t2}`;
     displayRange = (minP === maxP) ? `HKD${minP}` : `HKD${minP}－${maxP}`;
-
   } else {
     let tMin = sheetMinTier || "$";
     let tMax = sheetMaxTier || tMin;
@@ -358,23 +404,41 @@ function expandQueryVariants(q) {
    Data & State
 ========================= */
 let SALONS = [];
-// ✅ State: Added sortBy (default 'latest')
-let state = { q: "", activeTags: new Set(), nearMeMode: false, userLoc: null, requireCoords: false, sortBy: "latest" };
-// ✅ Page Size: 15
+let state = {
+  q: "",
+  activeTags: new Set(),
+  nearMeMode: false,
+  userLoc: null,
+  requireCoords: false,
+  sortMode: "updated"   // ✅ NEW: default sort
+};
+
+// ✅ NEW: 每頁 15 個
 let pageSize = 15;
 let page = 1;
 
 const FAV_KEY = "nailmap_favs_v1";
-function getFavSet() { try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); } catch { return new Set(); } }
-function saveFavSet(set) { localStorage.setItem(FAV_KEY, JSON.stringify([...set])); }
+function getFavSet() {
+  try {
+    const raw = storageGet(FAV_KEY);
+    return new Set(JSON.parse(raw || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+function saveFavSet(set) {
+  try { storageSet(FAV_KEY, JSON.stringify([...set])); } catch { /* ignore */ }
+}
 
 /* =========================
    Map Init
 ========================= */
 const defaultCenter = [22.3369, 114.1476];
 const defaultZoom = 12;
+
 const mapDesktop = L.map("mapDesktop", { zoomControl: false }).setView(defaultCenter, defaultZoom);
 const mapMobile  = L.map("mapMobile",  { zoomControl: false }).setView(defaultCenter, defaultZoom);
+
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapDesktop);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapMobile);
 
@@ -410,7 +474,7 @@ function normalizeSalon(raw) {
     return "";
   };
 
-  const s = {}; 
+  const s = {};
   s.id = String(getVal(["id"]) || "").trim();
   s.name = String(getVal(["name", "shop_name"]) || "").trim();
   s.district = String(getVal(["district"]) || "").trim();
@@ -422,28 +486,28 @@ function normalizeSalon(raw) {
 
   s.lat = toNum(getVal(["lat", "latitude"]));
   s.lng = toNum(getVal(["lng", "longitude"]));
-  
+
   s.tags = splitList(getVal(["tags"]));
   s.aliases = splitList(getVal(["aliases"]));
   s.address_display = String(getVal(["address_display", "address"]) || "").trim();
   s.note = String(getVal(["note"]) || "").trim();
   s.source_url = String(getVal(["source_url", "url"]) || "").trim();
-  
+
   s.show_updated = toBool(getVal(["show_updated"]));
   s.show_note = toBool(getVal(["show_note"]));
   s.public_info = toBool(getVal(["public_info"]));
 
-  let verified = String(getVal(["last_verified"]) || "").trim();
-  
-  // ✅ Calculate Timestamp & Price Score for Sorting
-  s._ts = 0;
-  if (verified) {
-    const d = new Date(verified);
-    if (!isNaN(d.getTime())) s._ts = d.getTime();
-  }
-  s.last_verified = formatDate(verified); 
+  const verifiedRaw = String(getVal(["last_verified"]) || "").trim();
+  s.last_verified = formatDate(verifiedRaw);
 
-  s._pScore = (s.price_tier_min || "").length; // 1 to 5
+  // ✅ NEW: sort key for "最後更新"
+  const ts = new Date(verifiedRaw).getTime();
+  s._lastVerifiedTs = Number.isFinite(ts) ? ts : 0;
+
+  // ✅ NEW: sort keys for price
+  const mm = extractMinMaxPriceFromSalon(s);
+  s._priceMin = (mm.min == null) ? null : mm.min;
+  s._priceMax = (mm.max == null) ? null : mm.max;
 
   const st = String(getVal(["status"]) || "").trim().toLowerCase();
   s.status = st || "active";
@@ -495,6 +559,33 @@ function isActiveStatus(s) {
   return st === "" || st === "active";
 }
 
+function sortItems(items) {
+  // Near Me 模式：距離優先（保留原本行為）
+  if (state.nearMeMode && state.userLoc) return items;
+
+  if (state.sortMode === "updated") {
+    return items.sort((a,b) => (b._lastVerifiedTs || 0) - (a._lastVerifiedTs || 0));
+  }
+
+  if (state.sortMode === "price_low") {
+    return items.sort((a,b) => {
+      const av = (a._priceMin == null) ? Number.POSITIVE_INFINITY : a._priceMin;
+      const bv = (b._priceMin == null) ? Number.POSITIVE_INFINITY : b._priceMin;
+      return av - bv;
+    });
+  }
+
+  if (state.sortMode === "price_high") {
+    return items.sort((a,b) => {
+      const av = (a._priceMax == null) ? Number.NEGATIVE_INFINITY : a._priceMax;
+      const bv = (b._priceMax == null) ? Number.NEGATIVE_INFINITY : b._priceMax;
+      return bv - av;
+    });
+  }
+
+  return items;
+}
+
 function getFiltered() {
   let items = SALONS
     .filter(isActiveStatus)
@@ -512,17 +603,11 @@ function getFiltered() {
       if (b._km == null) return -1;
       return a._km - b._km;
     });
-  } else {
-    // ✅ Sorting Logic
-    if (state.sortBy === "latest") {
-      items.sort((a, b) => b._ts - a._ts);
-    } else if (state.sortBy === "price_asc") {
-      items.sort((a, b) => a._pScore - b._pScore);
-    } else if (state.sortBy === "price_desc") {
-      items.sort((a, b) => b._pScore - a._pScore);
-    }
+    return items;
   }
-  
+
+  // ✅ NEW: default sort = updated desc
+  items = sortItems(items);
   return items;
 }
 
@@ -559,8 +644,8 @@ function renderList(items) {
       ? `<div class="text-[10px] text-text-subtle/80 mt-1 text-right">資料來源：公開可查閱資料，實際資訊以商戶最新公佈為準</div>`
       : "";
 
-    const pinHintHtml = hasCoords 
-      ? "" 
+    const pinHintHtml = hasCoords
+      ? ""
       : `<p class="text-[11px] text-text-subtle mt-1">（未能找到地址，地圖無法顯示）</p>`;
 
     return `
@@ -663,9 +748,9 @@ const handleSearch = debounce((e) => setQuery(e.target.value), 300);
 document.getElementById("qTop").addEventListener("input", handleSearch);
 document.getElementById("qMobile").addEventListener("input", handleSearch);
 
-// ✅ Sort Change
+// ✅ NEW: sort filter event
 document.getElementById("sortSelect").addEventListener("change", (e) => {
-  state.sortBy = e.target.value;
+  state.sortMode = e.target.value || "updated";
   page = 1;
   syncAll();
 });
@@ -696,12 +781,12 @@ document.getElementById("btnNearMe").addEventListener("click", () => {
   }, () => alert("定位失敗"));
 });
 
-document.getElementById("btnLocateDesktop").addEventListener("click", () => document.getElementById("btnNearMe").click());
-document.getElementById("btnLocateMobile").addEventListener("click", () => document.getElementById("btnNearMe").click());
-document.getElementById("btnZoomInDesktop").addEventListener("click", () => mapDesktop.zoomIn());
-document.getElementById("btnZoomOutDesktop").addEventListener("click", () => mapDesktop.zoomOut());
-document.getElementById("btnZoomInMobile").addEventListener("click", () => mapMobile.zoomIn());
-document.getElementById("btnZoomOutMobile").addEventListener("click", () => mapMobile.zoomOut());
+document.getElementById("btnLocateDesktop")?.addEventListener("click", () => document.getElementById("btnNearMe").click());
+document.getElementById("btnLocateMobile")?.addEventListener("click", () => document.getElementById("btnNearMe").click());
+document.getElementById("btnZoomInDesktop")?.addEventListener("click", () => mapDesktop.zoomIn());
+document.getElementById("btnZoomOutDesktop")?.addEventListener("click", () => mapDesktop.zoomOut());
+document.getElementById("btnZoomInMobile")?.addEventListener("click", () => mapMobile.zoomIn());
+document.getElementById("btnZoomOutMobile")?.addEventListener("click", () => mapMobile.zoomOut());
 
 document.getElementById("btnHasCoords").addEventListener("click", (e) => {
   state.requireCoords = !state.requireCoords;
@@ -718,8 +803,11 @@ document.getElementById("btnReset").addEventListener("click", () => {
   state.nearMeMode = false;
   state.userLoc = null;
   state.requireCoords = false;
-  state.sortBy = "latest"; 
-  document.getElementById("sortSelect").value = "latest";
+
+  // ✅ reset sort to default
+  state.sortMode = "updated";
+  document.getElementById("sortSelect").value = "updated";
+
   page = 1;
 
   document.getElementById("qTop").value = "";
@@ -730,71 +818,6 @@ document.getElementById("btnReset").addEventListener("click", () => {
 });
 
 document.getElementById("btnLoadMore").addEventListener("click", () => { page += 1; syncAll(); });
-
-document.getElementById("list").addEventListener("click", (e) => {
-  const favBtn = e.target.closest(".btnFav");
-  if (favBtn) {
-    e.stopPropagation();
-    const id = favBtn.getAttribute("data-fav");
-    const favs = getFavSet();
-    if (favs.has(id)) favs.delete(id); else favs.add(id);
-    saveFavSet(favs);
-    syncAll();
-    return;
-  }
-
-  const card = e.target.closest(".salonCard");
-  if (card) {
-    const id = card.getAttribute("data-id");
-    const s = SALONS.find(x => x.id === id);
-    if (s && Number.isFinite(s.lat) && Number.isFinite(s.lng)) {
-      mapDesktop.setView([s.lat, s.lng], 17);
-      mapMobile.setView([s.lat, s.lng], 17);
-      layerDesktop.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
-      layerMobile.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
-      if (window.innerWidth < 768) document.getElementById("tabMap").click();
-    }
-  }
-});
-
-const panelList = document.getElementById("panelList");
-const panelMapMobile = document.getElementById("panelMapMobile");
-const tabList = document.getElementById("tabList");
-const tabMap = document.getElementById("tabMap");
-
-tabList.addEventListener("click", () => {
-  panelList.classList.remove("hidden");
-  panelMapMobile.classList.add("hidden");
-  tabList.classList.add("bg-text-main","text-white");
-  tabList.classList.remove("text-text-main");
-  tabMap.classList.remove("bg-text-main","text-white");
-  tabMap.classList.add("text-text-main");
-});
-
-tabMap.addEventListener("click", () => {
-  panelList.classList.add("hidden");
-  panelMapMobile.classList.remove("hidden");
-  tabMap.classList.add("bg-text-main","text-white");
-  tabMap.classList.remove("text-text-main");
-  tabList.classList.remove("bg-text-main","text-white");
-  tabList.classList.add("text-text-main");
-
-  requestAnimationFrame(() => {
-    mapMobile.invalidateSize();
-    const items = getFiltered().filter(s => Number.isFinite(s.lat));
-    if (items.length) {
-      const bounds = L.latLngBounds(items.map(s => [s.lat, s.lng]));
-      mapMobile.fitBounds(bounds, { padding: [50,50], maxZoom: 16 });
-    }
-  });
-});
-
-window.addEventListener("resize", () => {
-  requestAnimationFrame(() => {
-    mapDesktop.invalidateSize();
-    mapMobile.invalidateSize();
-  });
-});
 
 /* =========================
    Boot
