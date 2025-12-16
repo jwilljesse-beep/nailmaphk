@@ -199,7 +199,7 @@
 /* =========================
    CONFIG
 ========================= */
-// ⚠️ 記得使用最新部署的 GAS URL
+// ✅ 使用你提供的最新 Script URL
 const API_URL = "https://script.google.com/macros/s/AKfycbzWRh14SK5_MgsyLGGm8V7mu2QsD3r4w1M6ME-0h6tWJJChj2YITcp4tR8xFBzhke1LCg/exec";
 
 /* =========================
@@ -249,6 +249,7 @@ function debounce(func, wait) {
   };
 }
 
+// ✅ DATE FORMATTER: "Mon Dec 15 2025..." -> "Dec 15 2025"
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -257,7 +258,7 @@ function formatDate(dateStr) {
 }
 
 /* =========================
-   Price Calculation & Fallback Map
+   ✅ Price Calculation & Fallback Map
 ========================= */
 const TIER_RANGES = {
   "$": { min: "200以下", max: "199" },
@@ -287,6 +288,7 @@ function formatPriceDisplay(s) {
   let displayRange = "";
 
   if (numbers && numbers.length > 0) {
+    // ✅ Plan A: 找到數字，自動計算
     let nums = numbers.map(n => parseInt(n, 10)).sort((a, b) => a - b);
     let minP = nums[0];
     let maxP = nums[nums.length - 1];
@@ -297,7 +299,7 @@ function formatPriceDisplay(s) {
     displayRange = (minP === maxP) ? `HKD${minP}` : `HKD${minP}－${maxP}`;
 
   } else {
-    // Fallback: Translate symbols to text range
+    // ✅ Plan B: 找不到數字，查表翻譯 (Fallback)
     let tMin = sheetMinTier || "$";
     let tMax = sheetMaxTier || tMin;
     displayTier = (tMin === tMax) ? tMin : `${tMin}-${tMax}`;
@@ -307,6 +309,7 @@ function formatPriceDisplay(s) {
     displayRange = `HKD${rangeLow}－${rangeHigh}`;
   }
 
+  // ✅ Final Output: Tier + "大約" + (Range)
   return `${displayTier} 大約（${displayRange}）`;
 }
 
@@ -710,9 +713,9 @@ async function load() {
     const data = await res.json();
     let rows = Array.isArray(data) ? data : (data.salons || []);
     
-    // 🛠️ DEBUG: 強制印出 API 資料讓使用者檢查
+    // 🛠️ DEBUG: Check console for raw keys
     if (rows.length > 0) {
-      console.log("🔥 [DEBUG] API 回傳的第一筆資料:", rows[0]);
+      console.log("🔥 API Raw Data Sample:", rows[0]);
     }
 
     SALONS = rows.map(normalizeSalon);
