@@ -199,7 +199,6 @@
 /* =========================
    CONFIG
 ========================= */
-// ⚠️ 記得使用最新部署的 GAS URL
 const API_URL = "https://script.google.com/macros/s/AKfycbzIweqyWYjcpMLsFB69d_a-l7RqeDhwpDJDpT_JVSJEUJUKBkRfR-wil4ttqkKlxRkvDg/exec";
 
 /* =========================
@@ -253,14 +252,23 @@ function debounce(func, wait) {
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr; // parsing failed, return original
-  // Option: 'en-GB' for DD/MM/YYYY or 'en-US' for Dec 15 2025
+  if (isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 /* =========================
-   ✅ Price Calculation Logic
+   ✅ Price Calculation & Fallback Map
 ========================= */
+// 符號 -> 文字翻譯表 (Plan B 使用)
+const TIER_RANGES = {
+  "$": { min: "200以下", max: "199" },
+  "$$": { min: "200", max: "499" },
+  "$$$": { min: "500", max: "799" },
+  "$$$$": { min: "800", max: "1299" },
+  "$$$$$": { min: "1300", max: "1300以上" }
+};
+
+// 數字 -> 符號計算 (Plan A 使用)
 function getTierSymbol(val) {
   if (val < 200) return "$";
   if (val < 500) return "$$";
@@ -270,12 +278,12 @@ function getTierSymbol(val) {
 }
 
 function formatPriceDisplay(s) {
-  // 1. Gather all price data
-  const sheetMinTier = (s.price_tier_min || "").trim();
-  const sheetMaxTier = (s.price_tier_max || "").trim();
-  const sheetRange = (s.price_range_hkd || "").trim();
-  
-  // Combine all to find numbers
+  // 1. Gather raw inputs
+  const sheetMinTier = (s.price_tier_min || "").trim(); // e.g. "$"
+  const sheetMaxTier = (s.price_tier_max || "").trim(); // e.g. "$$"
+  const sheetRange = (s.price_range_hkd || "").trim(); // e.g. "218-500" or empty
+
+  // Check if we have extractable numbers
   let rawStr = sheetRange + " " + sheetMinTier + " " + sheetMaxTier;
   let numbers = rawStr.match(/\d+/g);
 
@@ -283,7 +291,7 @@ function formatPriceDisplay(s) {
   let displayRange = "";
 
   if (numbers && numbers.length > 0) {
-    // ✅ Case A: Found numbers -> Auto Calculate
+    // ✅ Plan A: 找到數字，自動計算
     let nums = numbers.map(n => parseInt(n, 10)).sort((a, b) => a - b);
     let minP = nums[0];
     let maxP = nums[nums.length - 1];
@@ -291,32 +299,25 @@ function formatPriceDisplay(s) {
     let t1 = getTierSymbol(minP);
     let t2 = getTierSymbol(maxP);
     displayTier = (t1 === t2) ? t1 : `${t1}-${t2}`;
-
     displayRange = (minP === maxP) ? `HKD${minP}` : `HKD${minP}－${maxP}`;
 
   } else {
-    // ✅ Case B: No numbers -> Fallback to Sheet columns
-    if (sheetMinTier && sheetMaxTier) {
-       displayTier = (sheetMinTier === sheetMaxTier) ? sheetMinTier : `${sheetMinTier}-${sheetMaxTier}`;
-    } else {
-       displayTier = sheetMinTier || sheetMaxTier;
-    }
+    // ✅ Plan B: 找不到數字，查表翻譯 (Fallback)
+    // Step 1: 確定顯示的 $$ 符號
+    let tMin = sheetMinTier || "$"; // default minimal safety
+    let tMax = sheetMaxTier || tMin;
+    displayTier = (tMin === tMax) ? tMin : `${tMin}-${tMax}`;
 
-    if (sheetRange) {
-      // Clean up "HKD" if user typed it
-      const clean = sheetRange.replace(/HKD/ig, "").replace(/[-－—]/g, "－").trim();
-      displayRange = `HKD${clean}`;
-    }
+    // Step 2: 根據符號查表找出範圍文字
+    // 邏輯：從 Min Tier 的最小值，到 Max Tier 的最大值
+    let rangeLow = TIER_RANGES[tMin]?.min || "???";
+    let rangeHigh = TIER_RANGES[tMax]?.max || "???";
+    
+    displayRange = `HKD${rangeLow}－${rangeHigh}`;
   }
 
-  // ✅ Final Assembly: Tier + "大約" + (Range)
-  if (displayTier && displayRange) {
-    return `${displayTier} 大約（${displayRange}）`;
-  }
-  if (displayTier) return displayTier;
-  if (displayRange) return `大約（${displayRange}）`;
-  
-  return "";
+  // ✅ Final Output: Tier + "大約" + (Range)
+  return `${displayTier} 大約（${displayRange}）`;
 }
 
 /* =========================
@@ -411,6 +412,7 @@ function normalizeSalon(raw) {
   s.district = String(getVal(["district"]) || "").trim();
   s.district_en = String(getVal(["district_en"]) || "").trim();
 
+  // Price keys
   s.price_tier_min = String(getVal(["price_tier_min", "min_price"]) || "").trim();
   s.price_tier_max = String(getVal(["price_tier_max", "max_price"]) || "").trim();
   s.price_range_hkd = String(getVal(["price_range_hkd", "price_range"]) || "").trim();
@@ -426,7 +428,7 @@ function normalizeSalon(raw) {
   
   s.show_updated = toBool(getVal(["show_updated"]));
   
-  // ✅ Parse date immediately
+  // ✅ Parse date immediately (e.g. from 2025-12-15T00:00:00.000Z)
   let verified = String(getVal(["last_verified"]) || "").trim();
   s.last_verified = formatDate(verified); 
 
@@ -453,6 +455,7 @@ function matchesTags(s, tagsSet) {
   
   const itemTags = new Set((s.tags || []).map(t => t.toLowerCase()));
   
+  // Dynamic tagging based on extracted price
   let rawStr = (s.price_range_hkd || "") + " " + (s.price_tier_min || "");
   let numbers = rawStr.match(/\d+/g);
   if (numbers && numbers.length > 0) {
@@ -465,6 +468,7 @@ function matchesTags(s, tagsSet) {
      if (maxP >= 800 && minP < 1300) itemTags.add("$$$$");
      if (maxP >= 1300) itemTags.add("$$$$$");
   } else {
+     // Fallback tags from sheet columns
      if (s.price_tier_min) itemTags.add(s.price_tier_min.toLowerCase());
      if (s.price_tier_max) itemTags.add(s.price_tier_max.toLowerCase());
   }
@@ -507,7 +511,7 @@ function renderList(items) {
     const favOn = favs.has(s.id);
     const heartClass = favOn ? "text-tertiary" : "text-text-subtle";
 
-    // ✅ Clean Date Display
+    // ✅ Display: Updated as Dec 15 2025
     const updatedHtml = (s.show_updated && s.last_verified) 
       ? `<span class="text-[10px] text-text-subtle/80 ml-auto bg-background-light px-1.5 py-0.5 rounded border border-border-subtle/50">Updated as ${escapeHtml(s.last_verified)}</span>` 
       : "";
@@ -560,7 +564,7 @@ function renderMarkers(items) {
     const price = formatPriceDisplay(s);
     const tags = (s.tags || []).slice(0, 4).map(t => `<span style="display:inline-block;margin:2px 2px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:10px;">${escapeHtml(t)}</span>`).join("");
     
-    // ✅ Clean Date Display on Map
+    // ✅ Display: Updated as Dec 15 2025
     const updatedHtml = (s.show_updated && s.last_verified) 
       ? `<div style="margin-top:4px;font-size:9px;color:#999;text-align:right;">Updated as ${escapeHtml(s.last_verified)}</div>` 
       : "";
@@ -700,7 +704,6 @@ async function load() {
     const data = await res.json();
     let rows = Array.isArray(data) ? data : (data.salons || []);
     
-    // 🛠️ DEBUG: 強制印出 API 資料讓使用者檢查
     if (rows.length > 0) {
       console.log("🔥 [DEBUG] API 回傳的第一筆資料:", rows[0]);
     }
