@@ -45,7 +45,7 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .leaflet-container { font: inherit; }
-    /* Custom select style */
+    /* Sort Select Style */
     .sort-select {
       background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2399827D' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
       background-position: right 0.2rem center;
@@ -220,26 +220,6 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzWRh14SK5_MgsyLGGm8V7mu2QsD3r4w1M6ME-0h6tWJJChj2YITcp4tR8xFBzhke1LCg/exec";
 
 /* =========================
-   Global Safety Nets
-========================= */
-window.addEventListener("unhandledrejection", (e) => {
-  console.warn("Unhandled promise rejection (ignored to keep UI running):", e.reason);
-});
-window.addEventListener("error", (e) => {
-  console.warn("Window error:", e.message);
-});
-
-/* =========================
-   Safe Storage Wrapper
-========================= */
-function storageGet(key) {
-  try { return localStorage.getItem(key); } catch { return null; }
-}
-function storageSet(key, val) {
-  try { localStorage.setItem(key, val); } catch { /* ignore */ }
-}
-
-/* =========================
    Helpers
 ========================= */
 function norm(str) {
@@ -286,7 +266,6 @@ function debounce(func, wait) {
   };
 }
 
-// ✅ DATE FORMATTER: "Dec 15 2025"
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -295,7 +274,7 @@ function formatDate(dateStr) {
 }
 
 /* =========================
-   Price Calculation & Fallback Map
+   Price Calculation
 ========================= */
 const TIER_RANGES = {
   "$": { min: "200以下", max: "199" },
@@ -325,7 +304,6 @@ function formatPriceDisplay(s) {
   let displayRange = "";
 
   if (numbers && numbers.length > 0) {
-    // Plan A: Auto Calculate
     let nums = numbers.map(n => parseInt(n, 10)).sort((a, b) => a - b);
     let minP = nums[0];
     let maxP = nums[nums.length - 1];
@@ -336,7 +314,6 @@ function formatPriceDisplay(s) {
     displayRange = (minP === maxP) ? `HKD${minP}` : `HKD${minP}－${maxP}`;
 
   } else {
-    // Plan B: Fallback
     let tMin = sheetMinTier || "$";
     let tMax = sheetMaxTier || tMin;
     displayTier = (tMin === tMax) ? tMin : `${tMin}-${tMax}`;
@@ -372,9 +349,7 @@ function expandQueryVariants(q) {
   for (const item of DISTRICT_SYNONYMS) {
     const allKeywords = [...item.en, ...item.zh];
     const isHit = allKeywords.some(k => n.includes(norm(k)));
-    if (isHit) {
-      allKeywords.forEach(k => vars.add(norm(k)));
-    }
+    if (isHit) allKeywords.forEach(k => vars.add(norm(k)));
   }
   return [...vars];
 }
@@ -385,32 +360,21 @@ function expandQueryVariants(q) {
 let SALONS = [];
 // ✅ State: Added sortBy (default 'latest')
 let state = { q: "", activeTags: new Set(), nearMeMode: false, userLoc: null, requireCoords: false, sortBy: "latest" };
-// ✅ Page Size: Changed to 15
+// ✅ Page Size: 15
 let pageSize = 15;
 let page = 1;
 
 const FAV_KEY = "nailmap_favs_v1";
-function getFavSet() {
-  try {
-    const raw = storageGet(FAV_KEY);
-    return new Set(JSON.parse(raw || "[]"));
-  } catch {
-    return new Set();
-  }
-}
-function saveFavSet(set) {
-  try { storageSet(FAV_KEY, JSON.stringify([...set])); } catch { /* ignore */ }
-}
+function getFavSet() { try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || "[]")); } catch { return new Set(); } }
+function saveFavSet(set) { localStorage.setItem(FAV_KEY, JSON.stringify([...set])); }
 
 /* =========================
    Map Init
 ========================= */
 const defaultCenter = [22.3369, 114.1476];
 const defaultZoom = 12;
-
 const mapDesktop = L.map("mapDesktop", { zoomControl: false }).setView(defaultCenter, defaultZoom);
 const mapMobile  = L.map("mapMobile",  { zoomControl: false }).setView(defaultCenter, defaultZoom);
-
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapDesktop);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(mapMobile);
 
@@ -465,14 +429,13 @@ function normalizeSalon(raw) {
   s.note = String(getVal(["note"]) || "").trim();
   s.source_url = String(getVal(["source_url", "url"]) || "").trim();
   
-  // Logic
   s.show_updated = toBool(getVal(["show_updated"]));
   s.show_note = toBool(getVal(["show_note"]));
   s.public_info = toBool(getVal(["public_info"]));
 
   let verified = String(getVal(["last_verified"]) || "").trim();
   
-  // ✅ Store Timestamp for Sorting
+  // ✅ Calculate Timestamp & Price Score for Sorting
   s._ts = 0;
   if (verified) {
     const d = new Date(verified);
@@ -480,8 +443,7 @@ function normalizeSalon(raw) {
   }
   s.last_verified = formatDate(verified); 
 
-  // ✅ Store Price Score for Sorting
-  s._pScore = (s.price_tier_min || "").length; // $ = 1, $$ = 2
+  s._pScore = (s.price_tier_min || "").length; // 1 to 5
 
   const st = String(getVal(["status"]) || "").trim().toLowerCase();
   s.status = st || "active";
@@ -551,7 +513,7 @@ function getFiltered() {
       return a._km - b._km;
     });
   } else {
-    // ✅ Apply Sort if not Near Me
+    // ✅ Sorting Logic
     if (state.sortBy === "latest") {
       items.sort((a, b) => b._ts - a._ts);
     } else if (state.sortBy === "price_asc") {
@@ -701,7 +663,7 @@ const handleSearch = debounce((e) => setQuery(e.target.value), 300);
 document.getElementById("qTop").addEventListener("input", handleSearch);
 document.getElementById("qMobile").addEventListener("input", handleSearch);
 
-// ✅ Sort Event
+// ✅ Sort Change
 document.getElementById("sortSelect").addEventListener("change", (e) => {
   state.sortBy = e.target.value;
   page = 1;
@@ -756,8 +718,8 @@ document.getElementById("btnReset").addEventListener("click", () => {
   state.nearMeMode = false;
   state.userLoc = null;
   state.requireCoords = false;
-  state.sortBy = "latest"; // reset sort
-  document.getElementById("sortSelect").value = "latest"; // reset UI
+  state.sortBy = "latest"; 
+  document.getElementById("sortSelect").value = "latest";
   page = 1;
 
   document.getElementById("qTop").value = "";
@@ -791,8 +753,6 @@ document.getElementById("list").addEventListener("click", (e) => {
       layerDesktop.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
       layerMobile.eachLayer(l => { if (l._salonId === id) l.openPopup(); });
       if (window.innerWidth < 768) document.getElementById("tabMap").click();
-    } else {
-      // 點擊卡片時，如果沒有座標，不彈 Alert，靜默失敗即可（因為列表已經有文字提示）
     }
   }
 });
