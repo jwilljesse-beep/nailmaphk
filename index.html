@@ -52,7 +52,6 @@
   
   <header class="flex-none z-20 bg-white-overlay border-b border-border-subtle px-5 py-3 lg:px-10">
     <div class="flex items-center w-full max-w-[1920px] mx-auto">
-      
       <div class="flex-1 flex items-center gap-3">
         <div class="size-9 text-primary bg-background-light rounded-full flex items-center justify-center border border-border-subtle">
           <span class="material-symbols-outlined" style="font-size: 20px;">spa</span>
@@ -76,7 +75,6 @@
       <div class="flex-1 flex justify-end">
         <div class="hidden"></div> 
       </div>
-
     </div>
   </header>
 
@@ -201,7 +199,6 @@
 /* =========================
    CONFIG
 ========================= */
-// ⚠️ 記得使用最新部署的 GAS URL
 const API_URL = "https://script.google.com/macros/s/AKfycbzIweqyWYjcpMLsFB69d_a-l7RqeDhwpDJDpT_JVSJEUJUKBkRfR-wil4ttqkKlxRkvDg/exec";
 
 /* =========================
@@ -252,13 +249,46 @@ function debounce(func, wait) {
 }
 
 /* =========================
-   Price Display
+   ✅ Price Calculation Logic
 ========================= */
+// 規則：$ (<200), $$ (200-499), $$$ (500-799), $$$$ (800-1299), $$$$$ (1300+)
+function getTierSymbol(val) {
+  if (val < 200) return "$";
+  if (val < 500) return "$$";
+  if (val < 800) return "$$$";
+  if (val < 1300) return "$$$$";
+  return "$$$$$";
+}
+
 function formatPriceDisplay(s) {
+  // 1. 嘗試從欄位中提取所有數字 (處理 "218-1227" 或 "From 200" 等情況)
+  // 優先看 price_range_hkd，如果沒有則看 price_tier_min
+  let rawStr = (s.price_range_hkd || "") + " " + (s.price_tier_min || "");
+  let numbers = rawStr.match(/\d+/g);
+
+  // ✅ 情況 A: 找得到數字 -> 自動計算 Tier
+  if (numbers && numbers.length > 0) {
+    // 轉成數字並排序
+    let nums = numbers.map(n => parseInt(n, 10)).sort((a, b) => a - b);
+    let minPrice = nums[0];
+    let maxPrice = nums[nums.length - 1];
+
+    let minTier = getTierSymbol(minPrice);
+    let maxTier = getTierSymbol(maxPrice);
+
+    // 格式化 Tier: "$$-$$$$" 或 "$$"
+    let tierStr = (minTier === maxTier) ? minTier : `${minTier}-${maxTier}`;
+    
+    // 格式化 Range: "HKD 218–1227" 或 "HKD 218"
+    let rangeStr = (minPrice === maxPrice) ? `HKD${minPrice}` : `HKD${minPrice}－${maxPrice}`;
+
+    return `${tierStr}（${rangeStr}）`;
+  }
+
+  // ✅ 情況 B: 找不到數字 -> 退回使用原本的文字顯示 (Legacy Support)
+  // 這處理如果 Sheet 只有寫 "$" 但沒寫數字的情況
   const minTier = (s.price_tier_min || "").trim();
   const maxTier = (s.price_tier_max || "").trim();
-  const rawRange = (s.price_range_hkd || "").trim();
-
   let tierText = "";
   if (minTier && maxTier) {
     if (minTier === maxTier) tierText = minTier;
@@ -266,16 +296,8 @@ function formatPriceDisplay(s) {
   } else {
     tierText = (minTier || maxTier);
   }
-
-  let rangeText = "";
-  if (rawRange) {
-    const cleanRange = rawRange.replace(/HKD/i, "").replace(/–/g, "－").replace(/-/g, "－").trim();
-    rangeText = `HKD${cleanRange}`;
-  }
-
-  if (tierText && rangeText) return `${tierText}（${rangeText}）`;
-  if (tierText) return tierText;
-  if (rangeText) return rangeText;
+  
+  if (tierText) return tierText; // 只有符號，沒有價格
   return "";
 }
 
@@ -345,7 +367,7 @@ function setUserMarker(lat, lng) {
 }
 
 /* =========================
-   ✅ Smart Robust Normalization
+   Smart Robust Normalization
 ========================= */
 function normalizeSalon(raw) {
   const lookup = {};
@@ -384,8 +406,14 @@ function normalizeSalon(raw) {
   s.address_display = String(getVal(["address_display", "address"]) || "").trim();
   s.note = String(getVal(["note"]) || "").trim();
   s.source_url = String(getVal(["source_url", "url"]) || "").trim();
+  
+  // ✅ Updated Data Info
   s.show_updated = toBool(getVal(["show_updated"]));
-  s.last_verified = String(getVal(["last_verified"]) || "").trim();
+  // 處理日期格式：如果只有日期部分，保留；如果是 ISO，截取前段
+  let verified = String(getVal(["last_verified"]) || "").trim();
+  if (verified.includes("T")) verified = verified.split("T")[0];
+  s.last_verified = verified;
+
   s.status = String(getVal(["status"]) || "").trim().toLowerCase();
 
   return s;
@@ -403,14 +431,34 @@ function matchesQuery(s, q) {
   return variants.some(v => blob.includes(v));
 }
 
-// ✅ Filter logic that includes Price Tiers in tags
+// Filter logic including Price Tiers
 function matchesTags(s, tagsSet) {
   if (tagsSet.size === 0) return true;
   
-  // Combine tags and price tiers into one searchable set
+  // 為了 Filter 功能，我們也需要動態計算該店的 Tier
+  // 這樣如果店鋪只寫了 "250"，Filter 點 "$$" 時也能找到它
   const itemTags = new Set((s.tags || []).map(t => t.toLowerCase()));
-  if (s.price_tier_min) itemTags.add(s.price_tier_min.toLowerCase());
-  if (s.price_tier_max) itemTags.add(s.price_tier_max.toLowerCase());
+  
+  // 自動計算 Tier 並加入 Tags Set 供篩選
+  let rawStr = (s.price_range_hkd || "") + " " + (s.price_tier_min || "");
+  let numbers = rawStr.match(/\d+/g);
+  if (numbers && numbers.length > 0) {
+     let nums = numbers.map(n => parseInt(n, 10));
+     // 將該店包含的所有可能的 Tier 都加進去 (例如 200-900，涵蓋 $$, $$$, $$$$)
+     let minP = Math.min(...nums);
+     let maxP = Math.max(...nums);
+     
+     // 簡單檢查範圍包含
+     if (minP < 200) itemTags.add("$");
+     if (maxP >= 200 && minP < 500) itemTags.add("$$");
+     if (maxP >= 500 && minP < 800) itemTags.add("$$$");
+     if (maxP >= 800 && minP < 1300) itemTags.add("$$$$");
+     if (maxP >= 1300) itemTags.add("$$$$$");
+  } else {
+     // 如果沒數字，用舊方法
+     if (s.price_tier_min) itemTags.add(s.price_tier_min.toLowerCase());
+     if (s.price_tier_max) itemTags.add(s.price_tier_max.toLowerCase());
+  }
 
   for (const tag of tagsSet) { 
     if (!itemTags.has(tag.toLowerCase())) return false; 
@@ -450,6 +498,11 @@ function renderList(items) {
     const favOn = favs.has(s.id);
     const heartClass = favOn ? "text-tertiary" : "text-text-subtle";
 
+    // ✅ Updated Date Logic
+    const updatedHtml = (s.show_updated && s.last_verified) 
+      ? `<span class="text-[10px] text-text-subtle/80 ml-auto bg-background-light px-1.5 py-0.5 rounded border border-border-subtle/50">Updated as ${escapeHtml(s.last_verified)}</span>` 
+      : "";
+
     return `
       <article data-id="${escapeHtml(s.id)}" class="salonCard group bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 cursor-pointer">
         <div class="flex flex-col gap-3">
@@ -474,7 +527,11 @@ function renderList(items) {
           <div class="pt-3 border-t border-background-light">
              <div class="text-sm text-text-main"><span class="material-symbols-outlined align-[-5px] text-[18px] text-text-subtle">location_on</span> ${escapeHtml(s.address_display || "—")}</div>
              ${s.note ? `<div class="text-xs text-text-subtle mt-1">${escapeHtml(s.note)}</div>` : ""}
-             ${s.source_url ? `<div class="mt-2 text-right"><a href="${s.source_url}" target="_blank" class="text-xs text-primary-hover underline">Source</a></div>` : ""}
+             
+             <div class="mt-2 flex items-center justify-between">
+                ${s.source_url ? `<a href="${s.source_url}" target="_blank" class="text-xs text-primary-hover underline">Source</a>` : "<span></span>"}
+                ${updatedHtml}
+             </div>
           </div>
         </div>
       </article>
@@ -493,12 +550,19 @@ function renderMarkers(items) {
   withCoords.forEach(s => {
     const price = formatPriceDisplay(s);
     const tags = (s.tags || []).slice(0, 4).map(t => `<span style="display:inline-block;margin:2px 2px 0 0;padding:2px 6px;border:1px solid #EBDAD4;border-radius:999px;font-size:10px;">${escapeHtml(t)}</span>`).join("");
+    
+    // ✅ Updated Date Logic for Map
+    const updatedHtml = (s.show_updated && s.last_verified) 
+      ? `<div style="margin-top:4px;font-size:9px;color:#999;text-align:right;">Updated as ${escapeHtml(s.last_verified)}</div>` 
+      : "";
+
     const html = `
       <div style="min-width:220px;">
         <div style="font-weight:800;font-size:15px;color:#543D37;">${escapeHtml(s.name)}</div>
         <div style="margin-top:4px;font-size:12px;color:#99827D;">${escapeHtml(s.district)} ${price ? `• <b>${escapeHtml(price)}</b>` : ""}</div>
         <div style="margin-top:6px;font-size:13px;">${escapeHtml(s.address_display)}</div>
         <div style="margin-top:6px;">${tags}</div>
+        ${updatedHtml}
         ${s.source_url ? `<div style="margin-top:6px;"><a href="${s.source_url}" target="_blank" style="color:#E57A85;">Source</a></div>` : ""}
       </div>
     `;
